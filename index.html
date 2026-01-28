@@ -920,25 +920,21 @@
         
         // 同步遠端資料
         async function syncData() {
-            // 如果有設定Google Apps Script URL，則同步資料
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyN-1_WrtI4K96z4buD-_OfS2QemIdLF3lnMTt2SPEuVo_GYCBMSSL42kSAB43aAa2z9A/exec') {
+            // 修正：移除那個會擋住同步的字串比對判斷
+            if (SCRIPT_URL) {
                 try {
                     const response = await fetch(SCRIPT_URL + '?action=getData');
                     const data = await response.json();
-                    
-                    if (data.transactions) {
+                    if (data.success) {
                         transactions = data.transactions;
-                        localStorage.setItem('transactions', JSON.stringify(transactions));
-                    }
-                    
-                    if (data.config) {
                         config = data.config;
+                        localStorage.setItem('transactions', JSON.stringify(transactions));
                         localStorage.setItem('config', JSON.stringify(config));
+                        updateDropdowns();
+                        updateUI();
                     }
-                    
-                    updateUI();
                 } catch (error) {
-                    console.log('離線模式：使用本地資料');
+                    console.error('同步失敗:', error);
                 }
             }
         }
