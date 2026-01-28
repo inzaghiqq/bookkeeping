@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="記帳App">
+    <title>記帳App - 輕鬆管理你的財務</title>
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' width='100' height='100' rx='20'/><text x='50' y='70' text-anchor='middle' font-size='60' fill='white'>💰</text></svg>">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            padding-bottom: 80px;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 24px 20px;
+            border-radius: 0 0 32px 32px;
+            box-shadow: 0 10px 30px var(--shadow);
+            margin: -16px -16px 24px -16px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 150%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.5px;
+        }
+        
+        header .date {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Stats Cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px var(--shadow);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:active {
+            transform: scale(0.98);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+        
+        .stat-card.income::before {
+            background: linear-gradient(90deg, var(--success), #34d399);
+        }
+        
+        .stat-card.expense::before {
+            background: linear-gradient(90deg, var(--danger), #f87171);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 900;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -1px;
+        }
+        
+        /* Quick Add Card */
+        .quick-add {
+            background: var(--bg-card);
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 24px var(--shadow);
+            margin-bottom: 24px;
+        }
+        
+        .quick-add h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quick-add h2::before {
+            content: '⚡';
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .type-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .type-btn {
+            padding: 12px;
+            border: 2px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .type-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .type-btn.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .type-btn.income.active {
+            border-color: var(--success);
+            background: var(--success);
+        }
+        
+        .type-btn.expense.active {
+            border-color: var(--danger);
+            background: var(--danger);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Noto Sans TC', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        input[type="number"] {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 20px;
+        }
+        
+        .amount-input-wrapper {
+            position: relative;
+        }
+        
+        .amount-input-wrapper::before {
+            content: 'NT$';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        
+        .amount-input-wrapper input {
+            padding-left: 56px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans TC', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .btn:active {
+            transform: translateY(2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+        
+        /* Transaction List */
+        .transactions {
+            margin-bottom: 24px;
+        }
+        
+        .transactions h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .transaction-item {
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .transaction-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary);
+        }
+        
+        .transaction-item.income::before {
+            background: var(--success);
+        }
+        
+        .transaction-item.expense::before {
+            background: var(--danger);
+        }
+        
+        .transaction-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            background: var(--bg);
+        }
+        
+        .transaction-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .transaction-category {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+        
+        .transaction-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .transaction-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        
+        .transaction-amount.income {
+            color: var(--success);
+        }
+        
+        .transaction-amount.expense {
+            color: var(--danger);
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+            z-index: 100;
+            box-shadow: 0 -4px 12px var(--shadow);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        
+        .nav-item:active {
+            background: var(--bg-hover);
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item span {
+            font-size: 24px;
+        }
+        
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: var(--bg-card);
+            width: 100%;
+            max-height: 80vh;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:active {
+            transform: scale(0.9);
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        
+        .empty-state span {
+            font-size: 64px;
+            display: block;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        /* Search */
+        .search-bar {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-bar input {
+            padding-left: 48px;
+        }
+        
+        .search-bar::before {
+            content: '🔍';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            pointer-events: none;
+        }
+        
+        /* Account Balance */
+        .account-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .account-item {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .account-name {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        
+        .account-balance {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        /* Responsive */
+        @media (max-width: 400px) {
+            .stat-value {
+                font-size: 24px;
+            }
+            
+            .stats {
+                gap: 8px;
+            }
+            
+            .stat-card {
+                padding: 16px;
+            }
+        }
+        
+        /* Page Transitions */
+        .page {
+            display: none;
+            animation: fadeInPage 0.3s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeInPage {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Home Page -->
+        <div id="homePage" class="page active">
+            <div class="container">
+                <header>
+                    <h1>💰 記帳App</h1>
+                    <div class="date" id="currentDate"></div>
+                </header>
+                
+                <div class="stats">
+                    <div class="stat-card income">
+                        <div class="stat-label">本月收入</div>
+                        <div class="stat-value" id="monthlyIncome">$0</div>
+                    </div>
+                    <div class="stat-card expense">
+                        <div class="stat-label">本月支出</div>
+                        <div class="stat-value" id="monthlyExpense">$0</div>
+                    </div>
+                </div>
+                
+                <div class="quick-add">
+                    <h2>快速記帳</h2>
+                    
+                    <div class="type-selector">
+                        <button class="type-btn income" data-type="收入">收入</button>
+                        <button class="type-btn expense active" data-type="支出">支出</button>
+                        <button class="type-btn" data-type="轉帳">轉帳</button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>金額</label>
+                        <div class="amount-input-wrapper">
+                            <input type="number" id="amount" placeholder="0" inputmode="decimal">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="categoryGroup">
+                        <label>分類</label>
+                        <select id="category">
+                            <option value="">選擇分類</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="subcategoryGroup">
+                        <label>子分類</label>
+                        <select id="subcategory">
+                            <option value="">選擇子分類</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>帳戶</label>
+                        <select id="account">
+                            <option value="">選擇帳戶</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="accountToGroup" style="display:none;">
+                        <label>轉入帳戶</label>
+                        <select id="accountTo">
+                            <option value="">選擇帳戶</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>備註</label>
+                        <input type="text" id="description" placeholder="記錄一些細節...">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="addBtn">新增交易</button>
+                </div>
+                
+                <div class="transactions">
+                    <h2>📅 今日交易</h2>
+                    <div id="todayTransactions"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Query Page -->
+        <div id="queryPage" class="page">
+            <div class="container">
+                <header>
+                    <h1>🔍 查詢記錄</h1>
+                    <div class="date">進階查詢功能</div>
+                </header>
+                
+                <div class="quick-add">
+                    <div class="form-group">
+                        <label>起始日期</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>結束日期</label>
+                        <input type="date" id="endDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>帳戶</label>
+                        <select id="queryAccount">
+                            <option value="">全部帳戶</option>
+                        </select>
+                    </div>
+                    
+                    <div class="search-bar">
+                        <input type="text" id="searchKeyword" placeholder="搜尋關鍵字...">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="searchBtn">查詢</button>
+                </div>
+                
+                <div class="transactions">
+                    <h2>查詢結果</h2>
+                    <div id="queryResults"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Balance Page -->
+        <div id="balancePage" class="page">
+            <div class="container">
+                <header>
+                    <h1>💵 帳戶餘額</h1>
+                    <div class="date">查看所有帳戶</div>
+                </header>
+                
+                <div class="account-list" id="accountList"></div>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a class="nav-item active" data-page="homePage">
+                <span>🏠</span>
+                首頁
+            </a>
+            <a class="nav-item" data-page="queryPage">
+                <span>🔍</span>
+                查詢
+            </a>
+            <a class="nav-item" data-page="balancePage">
+                <span>💵</span>
+                餘額
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        // Google Apps Script Web App URL - 請替換成您的Web App URL
+        const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+        
+        // 資料結構
+        let transactions = [];
+        let config = {
+            categories: {},
+            subcategories: {},
+            accounts: []
+        };
+        let currentType = '支出';
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            setupEventListeners();
+            updateCurrentDate();
+            
+            // 檢查是否在獨立模式（已加入桌面）
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('已安裝為PWA');
+            }
+        });
+        
+        // 初始化App
+        function initApp() {
+            // 載入本地資料
+            loadLocalData();
+            
+            // 同步遠端資料
+            syncData();
+            
+            // 更新UI
+            updateUI();
+        }
+        
+        // 設定事件監聽
+        function setupEventListeners() {
+            // 類型選擇
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentType = this.dataset.type;
+                    updateCategoryOptions();
+                });
+            });
+            
+            // 分類變更
+            document.getElementById('category').addEventListener('change', function() {
+                updateSubcategoryOptions(this.value);
+            });
+            
+            // 新增按鈕
+            document.getElementById('addBtn').addEventListener('click', addTransaction);
+            
+            // 查詢按鈕
+            document.getElementById('searchBtn').addEventListener('click', performQuery);
+            
+            // 底部導航
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    switchPage(page);
+                });
+            });
+        }
+        
+        // 切換頁面
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(pageId).classList.add('active');
+            event.target.closest('.nav-item').classList.add('active');
+            
+            if (pageId === 'balancePage') {
+                updateAccountBalance();
+            }
+        }
+        
+        // 更新日期
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-TW', options);
+        }
+        
+        // 載入本地資料
+        function loadLocalData() {
+            const savedTransactions = localStorage.getItem('transactions');
+            const savedConfig = localStorage.getItem('config');
+            
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+            }
+            
+            if (savedConfig) {
+                config = JSON.parse(savedConfig);
+            } else {
+                // 預設配置
+                config = {
+                    categories: {
+                        '支出': ['飲食', '交通', '娛樂', '購物', '醫療', '其他'],
+                        '收入': ['薪資', '獎金', '投資', '其他收入']
+                    },
+                    subcategories: {
+                        '飲食': ['早餐', '午餐', '晚餐', '飲料', '零食'],
+                        '交通': ['公車', '捷運', '計程車', '加油', '停車'],
+                        '娛樂': ['電影', '遊戲', '旅遊', '運動'],
+                        '購物': ['服飾', '3C', '日用品', '書籍'],
+                        '醫療': ['看診', '藥品', '保健'],
+                        '其他': ['不分類'],
+                        '薪資': ['月薪', '時薪', '獎金'],
+                        '獎金': ['年終', '績效', '紅利'],
+                        '投資': ['股票', '基金', '定存'],
+                        '其他收入': ['不分類']
+                    },
+                    accounts: ['現金', '台銀', '郵局', 'RICHART', 'LINE BANK', '國泰世華']
+                };
+                
+                localStorage.setItem('config', JSON.stringify(config));
+            }
+            
+            updateCategoryOptions();
+            updateAccountOptions();
+        }
+        
+        // 同步遠端資料
+        async function syncData() {
+            // 如果有設定Google Apps Script URL，則同步資料
+            if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                try {
+                    const response = await fetch(SCRIPT_URL + '?action=getData');
+                    const data = await response.json();
+                    
+                    if (data.transactions) {
+                        transactions = data.transactions;
+                        localStorage.setItem('transactions', JSON.stringify(transactions));
+                    }
+                    
+                    if (data.config) {
+                        config = data.config;
+                        localStorage.setItem('config', JSON.stringify(config));
+                    }
+                    
+                    updateUI();
+                } catch (error) {
+                    console.log('離線模式：使用本地資料');
+                }
+            }
+        }
+        
+        // 更新分類選項
+        function updateCategoryOptions() {
+            const categorySelect = document.getElementById('category');
+            categorySelect.innerHTML = '<option value="">選擇分類</option>';
+            
+            const categoryGroup = document.getElementById('categoryGroup');
+            const subcategoryGroup = document.getElementById('subcategoryGroup');
+            const accountToGroup = document.getElementById('accountToGroup');
+            
+            if (currentType === '轉帳') {
+                categoryGroup.style.display = 'none';
+                subcategoryGroup.style.display = 'none';
+                accountToGroup.style.display = 'block';
+            } else {
+                categoryGroup.style.display = 'block';
+                subcategoryGroup.style.display = 'block';
+                accountToGroup.style.display = 'none';
+                
+                const categories = config.categories[currentType] || [];
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+        
+        // 更新子分類選項
+        function updateSubcategoryOptions(category) {
+            const subcategorySelect = document.getElementById('subcategory');
+            subcategorySelect.innerHTML = '<option value="">選擇子分類</option>';
+            
+            const subcategories = config.subcategories[category] || [];
+            subcategories.forEach(subcat => {
+                const option = document.createElement('option');
+                option.value = subcat;
+                option.textContent = subcat;
+                subcategorySelect.appendChild(option);
+            });
+        }
+        
+        // 更新帳戶選項
+        function updateAccountOptions() {
+            const accountSelect = document.getElementById('account');
+            const accountToSelect = document.getElementById('accountTo');
+            const queryAccountSelect = document.getElementById('queryAccount');
+            
+            [accountSelect, accountToSelect, queryAccountSelect].forEach(select => {
+                if (select.id === 'queryAccount') {
+                    select.innerHTML = '<option value="">全部帳戶</option>';
+                } else {
+                    select.innerHTML = '<option value="">選擇帳戶</option>';
+                }
+                
+                config.accounts.forEach(acc => {
+                    const option = document.createElement('option');
+                    option.value = acc;
+                    option.textContent = acc;
+                    select.appendChild(option);
+                });
+            });
+        }
+        
+        // 新增交易
+        async function addTransaction() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const subcategory = document.getElementById('subcategory').value;
+            const account = document.getElementById('account').value;
+            const accountTo = document.getElementById('accountTo').value;
+            const description = document.getElementById('description').value;
+            
+            // 驗證
+            if (!amount || amount <= 0) {
+                alert('請輸入有效金額');
+                return;
+            }
+            
+            if (!account) {
+                alert('請選擇帳戶');
+                return;
+            }
+            
+            if (currentType === '轉帳' && !accountTo) {
+                alert('請選擇轉入帳戶');
+                return;
+            }
+            
+            if (currentType !== '轉帳' && !category) {
+                alert('請選擇分類');
+                return;
+            }
+            
+            // 建立交易記錄
+            const transaction = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                type: currentType,
+                amount: amount,
+                category: category,
+                subcategory: subcategory,
+                account: account,
+                accountTo: accountTo,
+                description: description
+            };
+            
+            transactions.unshift(transaction);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            
+            // 同步到遠端
+            if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                try {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'addTransaction', transaction: transaction })
+                    });
+                } catch (error) {
+                    console.log('離線模式：已儲存至本地');
+                }
+            }
+            
+            // 清空表單
+            document.getElementById('amount').value = '';
+            document.getElementById('category').value = '';
+            document.getElementById('subcategory').value = '';
+            document.getElementById('description').value = '';
+            
+            // 更新UI
+            updateUI();
+            
+            // 顯示提示
+            showToast('✅ 交易新增成功');
+        }
+        
+        // 更新UI
+        function updateUI() {
+            updateMonthlyStats();
+            updateTodayTransactions();
+        }
+        
+        // 更新月度統計
+        function updateMonthlyStats() {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            let income = 0;
+            let expense = 0;
+            
+            transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate >= firstDay && tDate <= lastDay) {
+                    if (t.type === '收入') {
+                        income += t.amount;
+                    } else if (t.type === '支出') {
+                        expense += t.amount;
+                    }
+                }
+            });
+            
+            document.getElementById('monthlyIncome').textContent = formatCurrency(income);
+            document.getElementById('monthlyExpense').textContent = formatCurrency(expense);
+        }
+        
+        // 更新今日交易
+        function updateTodayTransactions() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todayTrans = transactions.filter(t => {
+                const tDate = new Date(t.date);
+                tDate.setHours(0, 0, 0, 0);
+                return tDate.getTime() === today.getTime();
+            });
+            
+            const container = document.getElementById('todayTransactions');
+            
+            if (todayTrans.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span>📭</span>
+                        <div>今天還沒有交易記錄</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = todayTrans.map(t => renderTransaction(t)).join('');
+        }
+        
+        // 渲染交易項目
+        function renderTransaction(t) {
+            const icon = getTransactionIcon(t);
+            const amountClass = t.type === '收入' ? 'income' : 'expense';
+            const amountSign = t.type === '收入' ? '+' : '-';
+            
+            return `
+                <div class="transaction-item ${t.type === '收入' ? 'income' : 'expense'}">
+                    <div class="transaction-icon">${icon}</div>
+                    <div class="transaction-info">
+                        <div class="transaction-category">${t.category || t.type}</div>
+                        <div class="transaction-desc">${t.description || t.subcategory || '無備註'}</div>
+                    </div>
+                    <div class="transaction-amount ${amountClass}">${amountSign}${formatCurrency(t.amount)}</div>
+                </div>
+            `;
+        }
+        
+        // 取得交易圖示
+        function getTransactionIcon(t) {
+            if (t.type === '轉帳') return '🔄';
+            if (t.type === '收入') return '💰';
+            
+            const icons = {
+                '飲食': '🍜',
+                '交通': '🚗',
+                '娛樂': '🎮',
+                '購物': '🛒',
+                '醫療': '💊',
+                '其他': '📝'
+            };
+            
+            return icons[t.category] || '💳';
+        }
+        
+        // 執行查詢
+        function performQuery() {
+            const startDate = new Date(document.getElementById('startDate').value);
+            const endDate = new Date(document.getElementById('endDate').value);
+            const account = document.getElementById('queryAccount').value;
+            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+            
+            endDate.setHours(23, 59, 59, 999);
+            
+            let results = transactions.filter(t => {
+                const tDate = new Date(t.date);
+                
+                if (tDate < startDate || tDate > endDate) return false;
+                if (account && t.account !== account) return false;
+                if (keyword && !t.description.toLowerCase().includes(keyword)) return false;
+                
+                return true;
+            });
+            
+            const container = document.getElementById('queryResults');
+            
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span>🔍</span>
+                        <div>沒有找到符合的記錄</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = results.map(t => renderTransaction(t)).join('');
+        }
+        
+        // 更新帳戶餘額
+        function updateAccountBalance() {
+            const balances = {};
+            
+            config.accounts.forEach(acc => {
+                balances[acc] = 0;
+            });
+            
+            transactions.forEach(t => {
+                if (t.type === '收入') {
+                    balances[t.account] = (balances[t.account] || 0) + t.amount;
+                } else if (t.type === '支出') {
+                    balances[t.account] = (balances[t.account] || 0) - t.amount;
+                } else if (t.type === '轉帳') {
+                    balances[t.account] = (balances[t.account] || 0) - t.amount;
+                    balances[t.accountTo] = (balances[t.accountTo] || 0) + t.amount;
+                }
+            });
+            
+            const container = document.getElementById('accountList');
+            container.innerHTML = Object.entries(balances)
+                .sort((a, b) => b[1] - a[1])
+                .map(([account, balance]) => `
+                    <div class="account-item">
+                        <div class="account-name">${account}</div>
+                        <div class="account-balance" style="color: ${balance >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatCurrency(balance)}</div>
+                    </div>
+                `).join('');
+        }
+        
+        // 格式化金額
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('zh-TW', {
+                style: 'currency',
+                currency: 'TWD',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        // 顯示提示
+        function showToast(message) {
+            // 簡單的提示實現
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--success);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 12px;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideDown 0.3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideUp 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+        
+        // 設定預設日期
+        const today = new Date().toISOString().split('T')[0];
+        const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        document.getElementById('startDate').value = firstDay;
+        document.getElementById('endDate').value = today;
+        
+        // Service Worker 註冊（PWA支援）
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker 註冊成功'))
+                    .catch(err => console.log('Service Worker 註冊失敗', err));
+            });
+        }
+    </script>
+</body>
+</html>
