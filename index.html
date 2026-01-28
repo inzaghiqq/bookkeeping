@@ -1130,12 +1130,35 @@
                 type: currentType,
                 amount: amount,
                 category: category,
-                account: account
+                account: account,
+                editing: editingTransactionId ? true : false
             });
+            
+            // 如果是編輯模式，先刪除舊記錄
+            if (editingTransactionId) {
+                const index = transactions.findIndex(t => t.id === editingTransactionId);
+                if (index !== -1) {
+                    const oldTransaction = transactions[index];
+                    transactions.splice(index, 1);
+                    console.log('🗑️ 已刪除舊記錄:', oldTransaction);
+                    
+                    // 同步刪除到雲端
+                    if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                        fetch(SCRIPT_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain' },
+                            body: JSON.stringify({ 
+                                action: 'deleteTransaction', 
+                                transaction: oldTransaction 
+                            })
+                        }).catch(e => console.log('舊記錄刪除失敗（離線）'));
+                    }
+                }
+            }
             
             // 建立交易記錄
             const transaction = {
-                id: Date.now(),
+                id: editingTransactionId || Date.now(),
                 date: new Date().toISOString(),
                 type: currentType,
                 amount: amount,
@@ -1149,6 +1172,11 @@
             transactions.unshift(transaction);
             localStorage.setItem('transactions', JSON.stringify(transactions));
             console.log('💾 已儲存到本地，本地交易數:', transactions.length);
+            
+            // 重置編輯模式
+            const isEditing = editingTransactionId !== null;
+            editingTransactionId = null;
+            document.getElementById('addBtn').textContent = '新增交易';
             
             // 同步到遠端
             if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
@@ -1166,18 +1194,18 @@
                     
                     if (result.success) {
                         console.log('✅ 雲端同步成功');
-                        showToast('✅ 已同步到雲端');
+                        showToast(isEditing ? '✅ 已更新（已同步）' : '✅ 已同步到雲端');
                     } else {
                         console.warn('⚠️ 雲端同步失敗:', result.error);
-                        showToast('✅ 已儲存（離線）');
+                        showToast(isEditing ? '✅ 已更新（離線）' : '✅ 已儲存（離線）');
                     }
                 } catch (error) {
                     console.error('❌ 雲端同步錯誤:', error);
-                    showToast('✅ 已儲存（離線）');
+                    showToast(isEditing ? '✅ 已更新（離線）' : '✅ 已儲存（離線）');
                 }
             } else {
                 console.log('💾 本地模式');
-                showToast('✅ 交易新增成功');
+                showToast(isEditing ? '✅ 交易已更新' : '✅ 交易新增成功');
             }
             
             // 清空表單
@@ -1381,14 +1409,19 @@
             });
             
             // 計算每個帳戶的餘額
-            transactions.forEach(t => {
+            transactions.forEach((t, index) => {
+                // 強制轉換金額為數字
+                const amount = parseFloat(t.amount) || 0;
+                
                 if (t.type === '收入') {
-                    balances[t.account] = (balances[t.account] || 0) + t.amount;
+                    balances[t.account] = (balances[t.account] || 0) + amount;
                 } else if (t.type === '支出') {
-                    balances[t.account] = (balances[t.account] || 0) - t.amount;
+                    balances[t.account] = (balances[t.account] || 0) - amount;
                 } else if (t.type === '轉帳') {
-                    balances[t.account] = (balances[t.account] || 0) - t.amount;
-                    balances[t.accountTo] = (balances[t.accountTo] || 0) + t.amount;
+                    balances[t.account] = (balances[t.account] || 0) - amount;
+                    if (t.accountTo) {
+                        balances[t.accountTo] = (balances[t.accountTo] || 0) + amount;
+                    }
                 }
             });
             
@@ -1502,6 +1535,8 @@
         }
         
         // 編輯交易
+        let editingTransactionId = null;  // 儲存正在編輯的交易ID
+        
         function editTransaction(id) {
             const transaction = transactions.find(t => t.id === id);
             if (!transaction) {
@@ -1510,6 +1545,9 @@
             }
             
             console.log('✏️ 編輯交易:', transaction);
+            
+            // 儲存編輯中的ID
+            editingTransactionId = id;
             
             // 填入表單
             currentType = transaction.type;
@@ -1541,16 +1579,16 @@
             
             document.getElementById('description').value = transaction.description || '';
             
-            // 先刪除舊的
-            deleteTransaction(id);
-            
             // 切換到首頁
             switchPage('homePage');
             
             // 捲動到表單
             document.querySelector('.quick-add').scrollIntoView({ behavior: 'smooth' });
             
-            showToast('📝 請修改後重新新增');
+            // 修改按鈕文字
+            document.getElementById('addBtn').textContent = '更新交易';
+            
+            showToast('📝 請修改後點選「更新交易」');
         }
         
         // 設定預設日期
@@ -1570,3 +1608,4 @@
     </script>
 </body>
 </html>
+
