@@ -1,6 +1,6 @@
 const CACHE_NAME = 'bookkeeping-app-v2';
 const urlsToCache = [
-  'index.html', // 修正：確保與你的 HTML 檔名一致
+  'index.html',
   'manifest.json'
 ];
 
@@ -36,19 +36,26 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
+        // 快取命中 - 返回快取的資源
         if (response) {
           return response;
         }
+        
         return fetch(event.request).then(
           response => {
+            // 檢查是否收到有效的回應
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
+            
+            // 複製回應
             const responseToCache = response.clone();
+            
             caches.open(CACHE_NAME)
               .then(cache => {
                 cache.put(event.request, responseToCache);
               });
+            
             return response;
           }
         );
