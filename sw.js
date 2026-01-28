@@ -1,6 +1,6 @@
 const CACHE_NAME = 'bookkeeping-app-v2';
 const urlsToCache = [
-  'bookkeeping-app.html',
+  'index.html',
   'manifest.json'
 ];
 
