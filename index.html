@@ -347,10 +347,10 @@
             background: var(--bg-card);
             padding: 16px;
             border-radius: 16px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             border: 1px solid var(--border);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
             transition: all 0.3s ease;
             position: relative;
@@ -375,42 +375,60 @@
             background: var(--danger);
         }
         
-        .transaction-icon {
-            width: 48px;
-            height: 48px;
+        .transaction-item.transfer::before {
+            background: var(--warning);
+        }
+        
+        .transaction-type-badge {
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             flex-shrink: 0;
             background: var(--bg);
         }
         
-        .transaction-info {
+        .transaction-content {
             flex: 1;
             min-width: 0;
         }
         
-        .transaction-category {
-            font-weight: 600;
-            font-size: 15px;
-            margin-bottom: 2px;
+        .transaction-detail-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 12px;
+            align-items: center;
         }
         
-        .transaction-date {
+        .detail-date {
+            grid-column: 1 / -1;
             font-size: 11px;
             color: var(--text-muted);
             font-family: 'JetBrains Mono', monospace;
             margin-bottom: 4px;
         }
         
-        .transaction-desc {
+        .detail-label {
             font-size: 12px;
             color: var(--text-muted);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-weight: 600;
+        }
+        
+        .detail-value {
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .transaction-amount-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
         }
         
         .transaction-amount {
@@ -426,6 +444,44 @@
         
         .transaction-amount.expense {
             color: var(--danger);
+        }
+        
+        .transaction-amount.transfer {
+            color: var(--warning);
+        }
+        
+        .transaction-actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .edit-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .delete-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
         }
         
         /* Bottom Navigation */
@@ -797,7 +853,7 @@
 
     <script>
         // Google Apps Script Web App URL - 請替換成您的Web App URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytIBxp-0JckyxGB9MBiSXqlyE3-inGIMmzMRnCz_NpjUdhZ1JaqcM-lHS8b98LfaES4w/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxocDuIZo0OegA2cQsB3vDoe5kPQbGCeIKB8Z3MmYZ6os9GtkHEyanM3cthtuZF3Q0Uwg/exec';
         
         // 資料結構
         let transactions = [];
@@ -931,7 +987,7 @@
             console.log('📍 SCRIPT_URL:', SCRIPT_URL);
             
             // 如果有設定Google Apps Script URL，則同步資料
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbytIBxp-0JckyxGB9MBiSXqlyE3-inGIMmzMRnCz_NpjUdhZ1JaqcM-lHS8b98LfaES4w/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxocDuIZo0OegA2cQsB3vDoe5kPQbGCeIKB8Z3MmYZ6os9GtkHEyanM3cthtuZF3Q0Uwg/exec') {
                 try {
                     console.log('📡 發送請求到:', SCRIPT_URL + '?action=getData');
                     const response = await fetch(SCRIPT_URL + '?action=getData');
@@ -1090,7 +1146,7 @@
             console.log('💾 已儲存到本地，本地交易數:', transactions.length);
             
             // 同步到遠端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbytIBxp-0JckyxGB9MBiSXqlyE3-inGIMmzMRnCz_NpjUdhZ1JaqcM-lHS8b98LfaES4w/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxocDuIZo0OegA2cQsB3vDoe5kPQbGCeIKB8Z3MmYZ6os9GtkHEyanM3cthtuZF3Q0Uwg/exec') {
                 try {
                     console.log('📡 同步到雲端...', SCRIPT_URL);
                     const response = await fetch(SCRIPT_URL, {
@@ -1182,38 +1238,78 @@
                 return;
             }
             
-            container.innerHTML = todayTrans.map(t => renderTransaction(t)).join('');
+            // 今日交易允許編輯
+            container.innerHTML = todayTrans.map(t => renderTransaction(t, false, true)).join('');
         }
         
         // 渲染交易項目
-        function renderTransaction(t, showDate = false) {
-            const icon = getTransactionIcon(t);
-            const amountClass = t.type === '收入' ? 'income' : 'expense';
+        function renderTransaction(t, showDate = false, allowEdit = false) {
+            const amountClass = t.type === '收入' ? 'income' : (t.type === '支出' ? 'expense' : 'transfer');
             const amountSign = t.type === '收入' ? '+' : '-';
             
             // 格式化日期
-            const dateStr = showDate ? new Date(t.date).toLocaleDateString('zh-TW', {
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : '';
+            let dateStr = '';
+            if (showDate) {
+                const d = new Date(t.date);
+                dateStr = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            }
             
-            // 組合顯示文字
-            let displayText = '';
-            if (t.category) displayText += t.category;
-            if (t.subcategory) displayText += (displayText ? ' › ' : '') + t.subcategory;
-            if (!displayText) displayText = t.type;
+            // 根據交易類型顯示不同內容
+            let contentHTML = '';
+            
+            if (t.type === '轉帳') {
+                // 轉帳：日期、帳戶、帳戶(到)、金額
+                contentHTML = `
+                    <div class="transaction-detail-grid">
+                        ${showDate ? `<div class="detail-date">${dateStr}</div>` : ''}
+                        <div class="detail-label">帳戶：</div>
+                        <div class="detail-value">${t.account}</div>
+                        <div class="detail-label">轉至：</div>
+                        <div class="detail-value">${t.accountTo || '未知'}</div>
+                        ${t.description ? `
+                            <div class="detail-label">備註：</div>
+                            <div class="detail-value">${t.description}</div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                // 收入/支出：日期、子分類、帳戶、金額、敘述
+                contentHTML = `
+                    <div class="transaction-detail-grid">
+                        ${showDate ? `<div class="detail-date">${dateStr}</div>` : ''}
+                        <div class="detail-label">分類：</div>
+                        <div class="detail-value">${t.subcategory || t.category || '未分類'}</div>
+                        <div class="detail-label">帳戶：</div>
+                        <div class="detail-value">${t.account}</div>
+                        ${t.description ? `
+                            <div class="detail-label">備註：</div>
+                            <div class="detail-value">${t.description}</div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            
+            // 編輯/刪除按鈕
+            let actionButtons = '';
+            if (allowEdit) {
+                actionButtons = `
+                    <div class="transaction-actions">
+                        <button class="action-btn edit-btn" onclick="editTransaction(${t.id})">✏️</button>
+                        <button class="action-btn delete-btn" onclick="deleteTransaction(${t.id})">🗑️</button>
+                    </div>
+                `;
+            }
             
             return `
-                <div class="transaction-item ${t.type === '收入' ? 'income' : 'expense'}">
-                    <div class="transaction-icon">${icon}</div>
-                    <div class="transaction-info">
-                        ${showDate ? `<div class="transaction-date">${dateStr}</div>` : ''}
-                        <div class="transaction-category">${displayText}</div>
-                        ${t.description ? `<div class="transaction-desc">${t.description}</div>` : ''}
+                <div class="transaction-item ${amountClass}" data-id="${t.id}">
+                    <div class="transaction-type-badge">${t.type === '轉帳' ? '🔄' : (t.type === '收入' ? '💰' : '💳')}</div>
+                    <div class="transaction-content">
+                        ${contentHTML}
                     </div>
-                    <div class="transaction-amount ${amountClass}">${amountSign}${formatCurrency(t.amount)}</div>
+                    <div class="transaction-amount-section">
+                        <div class="transaction-amount ${amountClass}">${amountSign}${formatCurrency(t.amount)}</div>
+                        ${actionButtons}
+                    </div>
                 </div>
             `;
         }
@@ -1266,8 +1362,8 @@
                 return;
             }
             
-            // 查詢結果顯示日期
-            container.innerHTML = results.map(t => renderTransaction(t, true)).join('');
+            // 查詢結果顯示日期並允許編輯
+            container.innerHTML = results.map(t => renderTransaction(t, true, true)).join('');
         }
         
         // 更新帳戶餘額
@@ -1341,6 +1437,117 @@
             }, 2000);
         }
         
+        // ==================== 編輯和刪除功能 ====================
+        
+        // 刪除交易
+        async function deleteTransaction(id) {
+            if (!confirm('確定要刪除這筆交易嗎？')) {
+                return;
+            }
+            
+            console.log('🗑️ 刪除交易 ID:', id);
+            
+            // 從本地陣列中移除
+            const index = transactions.findIndex(t => t.id === id);
+            if (index === -1) {
+                alert('找不到這筆交易');
+                return;
+            }
+            
+            const deletedTransaction = transactions[index];
+            transactions.splice(index, 1);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            console.log('💾 已從本地刪除');
+            
+            // 同步到雲端
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxocDuIZo0OegA2cQsB3vDoe5kPQbGCeIKB8Z3MmYZ6os9GtkHEyanM3cthtuZF3Q0Uwg/exec') {
+                try {
+                    console.log('📡 同步刪除到雲端...');
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain',
+                        },
+                        body: JSON.stringify({ 
+                            action: 'deleteTransaction', 
+                            transactionId: id,
+                            transaction: deletedTransaction
+                        })
+                    });
+                    const result = await response.json();
+                    console.log('📥 雲端回應:', result);
+                    
+                    if (result.success) {
+                        console.log('✅ 雲端刪除成功');
+                        showToast('✅ 已刪除（已同步）');
+                    } else {
+                        console.warn('⚠️ 雲端刪除失敗:', result.error);
+                        showToast('✅ 已刪除（離線）');
+                    }
+                } catch (error) {
+                    console.error('❌ 雲端刪除錯誤:', error);
+                    showToast('✅ 已刪除（離線）');
+                }
+            } else {
+                showToast('✅ 交易已刪除');
+            }
+            
+            // 更新UI
+            updateUI();
+        }
+        
+        // 編輯交易
+        function editTransaction(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (!transaction) {
+                alert('找不到這筆交易');
+                return;
+            }
+            
+            console.log('✏️ 編輯交易:', transaction);
+            
+            // 填入表單
+            currentType = transaction.type;
+            
+            // 更新類型按鈕
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.type === transaction.type) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // 更新分類選項
+            updateCategoryOptions();
+            
+            // 填入資料
+            document.getElementById('amount').value = transaction.amount;
+            document.getElementById('category').value = transaction.category || '';
+            
+            // 觸發分類變更以更新子分類
+            updateSubcategoryOptions(transaction.category);
+            document.getElementById('subcategory').value = transaction.subcategory || '';
+            
+            document.getElementById('account').value = transaction.account;
+            
+            if (transaction.type === '轉帳') {
+                document.getElementById('accountTo').value = transaction.accountTo || '';
+            }
+            
+            document.getElementById('description').value = transaction.description || '';
+            
+            // 先刪除舊的
+            deleteTransaction(id);
+            
+            // 切換到首頁
+            switchPage('homePage');
+            
+            // 捲動到表單
+            document.querySelector('.quick-add').scrollIntoView({ behavior: 'smooth' });
+            
+            showToast('📝 請修改後重新新增');
+        }
+        
         // 設定預設日期
         const today = new Date().toISOString().split('T')[0];
         const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
@@ -1358,4 +1565,3 @@
     </script>
 </body>
 </html>
-
