@@ -790,7 +790,7 @@
 
     <script>
         // Google Apps Script Web App URL - 請替換成您的Web App URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-f2PwVh9juKxmXmVmmMSY3MQzdcsA4uLspdeAQEipM3G_3yTdbSgy4jMPLaZEe_jpIA/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN-1_WrtI4K96z4buD-_OfS2QemIdLF3lnMTt2SPEuVo_GYCBMSSL42kSAB43aAa2z9A/exec';
         
         // 資料結構
         let transactions = [];
@@ -921,7 +921,7 @@
         // 同步遠端資料
         async function syncData() {
             // 如果有設定Google Apps Script URL，則同步資料
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycby-f2PwVh9juKxmXmVmmMSY3MQzdcsA4uLspdeAQEipM3G_3yTdbSgy4jMPLaZEe_jpIA/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyN-1_WrtI4K96z4buD-_OfS2QemIdLF3lnMTt2SPEuVo_GYCBMSSL42kSAB43aAa2z9A/exec') {
                 try {
                     const response = await fetch(SCRIPT_URL + '?action=getData');
                     const data = await response.json();
@@ -1054,7 +1054,7 @@
             localStorage.setItem('transactions', JSON.stringify(transactions));
             
             // 同步到遠端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycby-f2PwVh9juKxmXmVmmMSY3MQzdcsA4uLspdeAQEipM3G_3yTdbSgy4jMPLaZEe_jpIA/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyN-1_WrtI4K96z4buD-_OfS2QemIdLF3lnMTt2SPEuVo_GYCBMSSL42kSAB43aAa2z9A/exec') {
                 try {
                     await fetch(SCRIPT_URL, {
                         method: 'POST',
