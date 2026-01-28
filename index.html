@@ -398,6 +398,13 @@
             margin-bottom: 2px;
         }
         
+        .transaction-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 4px;
+        }
+        
         .transaction-desc {
             font-size: 12px;
             color: var(--text-muted);
@@ -790,7 +797,7 @@
 
     <script>
         // Google Apps Script Web App URL - 請替換成您的Web App URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN-1_WrtI4K96z4buD-_OfS2QemIdLF3lnMTt2SPEuVo_GYCBMSSL42kSAB43aAa2z9A/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytIBxp-0JckyxGB9MBiSXqlyE3-inGIMmzMRnCz_NpjUdhZ1JaqcM-lHS8b98LfaES4w/exec';
         
         // 資料結構
         let transactions = [];
@@ -920,22 +927,47 @@
         
         // 同步遠端資料
         async function syncData() {
-            // 修正：移除那個會擋住同步的字串比對判斷
-            if (SCRIPT_URL) {
+            console.log('🔄 開始同步資料...');
+            console.log('📍 SCRIPT_URL:', SCRIPT_URL);
+            
+            // 如果有設定Google Apps Script URL，則同步資料
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbytIBxp-0JckyxGB9MBiSXqlyE3-inGIMmzMRnCz_NpjUdhZ1JaqcM-lHS8b98LfaES4w/exec') {
                 try {
+                    console.log('📡 發送請求到:', SCRIPT_URL + '?action=getData');
                     const response = await fetch(SCRIPT_URL + '?action=getData');
+                    console.log('📥 收到回應，狀態:', response.status);
+                    
                     const data = await response.json();
-                    if (data.success) {
+                    console.log('📦 解析資料成功');
+                    console.log('   - 雲端交易數:', data.transactions ? data.transactions.length : 0);
+                    console.log('   - 雲端帳戶數:', data.config ? data.config.accounts.length : 0);
+                    
+                    if (data.transactions) {
                         transactions = data.transactions;
-                        config = data.config;
                         localStorage.setItem('transactions', JSON.stringify(transactions));
+                        console.log('✅ 交易資料已更新');
+                    }
+                    
+                    if (data.config) {
+                        config = data.config;
                         localStorage.setItem('config', JSON.stringify(config));
-                        updateDropdowns();
-                        updateUI();
+                        console.log('✅ 設定資料已更新');
+                    }
+                    
+                    updateUI();
+                    console.log('✅ 同步完成！');
+                    
+                    // 顯示同步成功提示（僅限非首次載入）
+                    if (transactions.length > 0) {
+                        showToast('☁️ 雲端同步成功');
                     }
                 } catch (error) {
-                    console.error('同步失敗:', error);
+                    console.error('❌ 同步錯誤:', error);
+                    console.log('💾 使用本地資料');
                 }
+            } else {
+                console.log('⚠️ 未設定 SCRIPT_URL，使用本地模式');
+                console.log('   提示：若要啟用雲端同步，請在 HTML 中設定 SCRIPT_URL');
             }
         }
         
@@ -1033,6 +1065,13 @@
                 return;
             }
             
+            console.log('➕ 新增交易:', {
+                type: currentType,
+                amount: amount,
+                category: category,
+                account: account
+            });
+            
             // 建立交易記錄
             const transaction = {
                 id: Date.now(),
@@ -1048,17 +1087,36 @@
             
             transactions.unshift(transaction);
             localStorage.setItem('transactions', JSON.stringify(transactions));
+            console.log('💾 已儲存到本地，本地交易數:', transactions.length);
             
             // 同步到遠端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyN-1_WrtI4K96z4buD-_OfS2QemIdLF3lnMTt2SPEuVo_GYCBMSSL42kSAB43aAa2z9A/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbytIBxp-0JckyxGB9MBiSXqlyE3-inGIMmzMRnCz_NpjUdhZ1JaqcM-lHS8b98LfaES4w/exec') {
                 try {
-                    await fetch(SCRIPT_URL, {
+                    console.log('📡 同步到雲端...', SCRIPT_URL);
+                    const response = await fetch(SCRIPT_URL, {
                         method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain',
+                        },
                         body: JSON.stringify({ action: 'addTransaction', transaction: transaction })
                     });
+                    const result = await response.json();
+                    console.log('📥 雲端回應:', result);
+                    
+                    if (result.success) {
+                        console.log('✅ 雲端同步成功');
+                        showToast('✅ 已同步到雲端');
+                    } else {
+                        console.warn('⚠️ 雲端同步失敗:', result.error);
+                        showToast('✅ 已儲存（離線）');
+                    }
                 } catch (error) {
-                    console.log('離線模式：已儲存至本地');
+                    console.error('❌ 雲端同步錯誤:', error);
+                    showToast('✅ 已儲存（離線）');
                 }
+            } else {
+                console.log('💾 本地模式');
+                showToast('✅ 交易新增成功');
             }
             
             // 清空表單
@@ -1069,9 +1127,6 @@
             
             // 更新UI
             updateUI();
-            
-            // 顯示提示
-            showToast('✅ 交易新增成功');
         }
         
         // 更新UI
@@ -1131,17 +1186,32 @@
         }
         
         // 渲染交易項目
-        function renderTransaction(t) {
+        function renderTransaction(t, showDate = false) {
             const icon = getTransactionIcon(t);
             const amountClass = t.type === '收入' ? 'income' : 'expense';
             const amountSign = t.type === '收入' ? '+' : '-';
+            
+            // 格式化日期
+            const dateStr = showDate ? new Date(t.date).toLocaleDateString('zh-TW', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '';
+            
+            // 組合顯示文字
+            let displayText = '';
+            if (t.category) displayText += t.category;
+            if (t.subcategory) displayText += (displayText ? ' › ' : '') + t.subcategory;
+            if (!displayText) displayText = t.type;
             
             return `
                 <div class="transaction-item ${t.type === '收入' ? 'income' : 'expense'}">
                     <div class="transaction-icon">${icon}</div>
                     <div class="transaction-info">
-                        <div class="transaction-category">${t.category || t.type}</div>
-                        <div class="transaction-desc">${t.description || t.subcategory || '無備註'}</div>
+                        ${showDate ? `<div class="transaction-date">${dateStr}</div>` : ''}
+                        <div class="transaction-category">${displayText}</div>
+                        ${t.description ? `<div class="transaction-desc">${t.description}</div>` : ''}
                     </div>
                     <div class="transaction-amount ${amountClass}">${amountSign}${formatCurrency(t.amount)}</div>
                 </div>
@@ -1196,17 +1266,20 @@
                 return;
             }
             
-            container.innerHTML = results.map(t => renderTransaction(t)).join('');
+            // 查詢結果顯示日期
+            container.innerHTML = results.map(t => renderTransaction(t, true)).join('');
         }
         
         // 更新帳戶餘額
         function updateAccountBalance() {
             const balances = {};
             
+            // 初始化所有帳戶餘額為0
             config.accounts.forEach(acc => {
                 balances[acc] = 0;
             });
             
+            // 計算每個帳戶的餘額
             transactions.forEach(t => {
                 if (t.type === '收入') {
                     balances[t.account] = (balances[t.account] || 0) + t.amount;
@@ -1218,15 +1291,18 @@
                 }
             });
             
+            // 按照 config.accounts 的順序顯示（而不是按餘額排序）
             const container = document.getElementById('accountList');
-            container.innerHTML = Object.entries(balances)
-                .sort((a, b) => b[1] - a[1])
-                .map(([account, balance]) => `
-                    <div class="account-item">
-                        <div class="account-name">${account}</div>
-                        <div class="account-balance" style="color: ${balance >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatCurrency(balance)}</div>
-                    </div>
-                `).join('');
+            container.innerHTML = config.accounts
+                .map(account => {
+                    const balance = balances[account] || 0;
+                    return `
+                        <div class="account-item">
+                            <div class="account-name">${account}</div>
+                            <div class="account-balance" style="color: ${balance >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatCurrency(balance)}</div>
+                        </div>
+                    `;
+                }).join('');
         }
         
         // 格式化金額
@@ -1282,3 +1358,4 @@
     </script>
 </body>
 </html>
+
