@@ -987,13 +987,16 @@
             console.log('📍 SCRIPT_URL:', SCRIPT_URL);
             
             // 如果有設定Google Apps Script URL，則同步資料
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxocDuIZo0OegA2cQsB3vDoe5kPQbGCeIKB8Z3MmYZ6os9GtkHEyanM3cthtuZF3Q0Uwg/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
                 try {
                     console.log('📡 發送請求到:', SCRIPT_URL + '?action=getData');
                     const response = await fetch(SCRIPT_URL + '?action=getData');
                     console.log('📥 收到回應，狀態:', response.status);
                     
-                    const data = await response.json();
+                    const text = await response.text();
+                    console.log('📄 原始回應長度:', text.length, '字元');
+                    
+                    const data = JSON.parse(text);
                     console.log('📦 解析資料成功');
                     console.log('   - 雲端交易數:', data.transactions ? data.transactions.length : 0);
                     console.log('   - 雲端帳戶數:', data.config ? data.config.accounts.length : 0);
@@ -1001,7 +1004,7 @@
                     if (data.transactions) {
                         transactions = data.transactions;
                         localStorage.setItem('transactions', JSON.stringify(transactions));
-                        console.log('✅ 交易資料已更新');
+                        console.log('✅ 交易資料已更新，筆數:', transactions.length);
                     }
                     
                     if (data.config) {
@@ -1018,7 +1021,9 @@
                         showToast('☁️ 雲端同步成功');
                     }
                 } catch (error) {
-                    console.error('❌ 同步錯誤:', error);
+                    console.error('❌ 同步錯誤詳情:', error);
+                    console.error('❌ 錯誤訊息:', error.message);
+                    console.error('❌ 錯誤堆疊:', error.stack);
                     console.log('💾 使用本地資料');
                 }
             } else {
@@ -1146,7 +1151,7 @@
             console.log('💾 已儲存到本地，本地交易數:', transactions.length);
             
             // 同步到遠端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxocDuIZo0OegA2cQsB3vDoe5kPQbGCeIKB8Z3MmYZ6os9GtkHEyanM3cthtuZF3Q0Uwg/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
                 try {
                     console.log('📡 同步到雲端...', SCRIPT_URL);
                     const response = await fetch(SCRIPT_URL, {
@@ -1460,7 +1465,7 @@
             console.log('💾 已從本地刪除');
             
             // 同步到雲端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbxocDuIZo0OegA2cQsB3vDoe5kPQbGCeIKB8Z3MmYZ6os9GtkHEyanM3cthtuZF3Q0Uwg/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
                 try {
                     console.log('📡 同步刪除到雲端...');
                     const response = await fetch(SCRIPT_URL, {
