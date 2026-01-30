@@ -6,13 +6,10 @@
     <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Gorden記帳">
-    <title>Gorden記帳</title>
+    <meta name="apple-mobile-web-app-title" content="記帳App">
+    <title>記帳App</title>
     
-    <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json">
-    
-    <!-- Icons -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' width='100' height='100' rx='20'/><text x='50' y='70' text-anchor='middle' font-size='60' fill='white'>💰</text></svg>">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,1593 +17,233 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --primary-light: #818cf8;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #0f172a;
-            --bg-card: #1e293b;
-            --bg-hover: #334155;
-            --text: #f1f5f9;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --shadow: rgba(0, 0, 0, 0.3);
-        }
-        
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            overflow-x: hidden;
-            padding-bottom: 80px;
-            position: relative;
-            min-height: 100vh;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
-            animation: rotate 20s linear infinite;
-            z-index: 0;
-            pointer-events: none;
-        }
-        
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 16px;
-        }
-        
-        /* Header */
-        header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            padding: 24px 20px;
-            border-radius: 0 0 32px 32px;
-            box-shadow: 0 10px 30px var(--shadow);
-            margin: -16px -16px 24px -16px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -20%;
-            width: 150%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-        }
-        
-        header h1 {
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 4px;
-            position: relative;
-            z-index: 1;
-            letter-spacing: -0.5px;
-        }
-        
-        header .date {
-            color: rgba(255,255,255,0.8);
-            font-size: 14px;
-            font-weight: 500;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Stats Cards */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        
-        .stat-card {
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 12px var(--shadow);
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .stat-card:active {
-            transform: scale(0.98);
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-light));
-        }
-        
-        .stat-card.income::before {
-            background: linear-gradient(90deg, var(--success), #34d399);
-        }
-        
-        .stat-card.expense::before {
-            background: linear-gradient(90deg, var(--danger), #f87171);
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: 900;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -1px;
-        }
-        
-        /* Quick Add Card */
-        .quick-add {
-            background: var(--bg-card);
-            padding: 24px;
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            box-shadow: 0 8px 24px var(--shadow);
-            margin-bottom: 24px;
-        }
-        
-        .quick-add h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .quick-add h2::before {
-            content: '⚡';
-            font-size: 24px;
-        }
-        
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .type-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .type-btn {
-            padding: 12px;
-            border: 2px solid var(--border);
-            background: transparent;
-            color: var(--text);
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Noto Sans TC', sans-serif;
-        }
-        
-        .type-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .type-btn.active {
-            border-color: var(--primary);
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-        
-        .type-btn.income.active {
-            border-color: var(--success);
-            background: var(--success);
-        }
-        
-        .type-btn.expense.active {
-            border-color: var(--danger);
-            background: var(--danger);
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: 'Noto Sans TC', sans-serif;
-            transition: all 0.3s ease;
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-        }
-        
-        input[type="number"] {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 20px;
-        }
-        
-        .amount-input-wrapper {
-            position: relative;
-        }
-        
-        .amount-input-wrapper::before {
-            content: 'NT$';
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 14px;
-            pointer-events: none;
-        }
-        
-        .amount-input-wrapper input {
-            padding-left: 56px;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 16px;
-            border: none;
-            border-radius: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Noto Sans TC', sans-serif;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-        
-        .btn:active {
-            transform: translateY(2px);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-        }
-        
-        /* Transaction List */
-        .transactions {
-            margin-bottom: 24px;
-        }
-        
-        .transactions h2 {
-            font-size: 18px;
-            margin-bottom: 16px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .transaction-item {
-            background: var(--bg-card);
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 12px;
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .transaction-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--primary);
-        }
-        
-        .transaction-item.income::before {
-            background: var(--success);
-        }
-        
-        .transaction-item.expense::before {
-            background: var(--danger);
-        }
-        
-        .transaction-item.transfer::before {
-            background: var(--warning);
-        }
-        
-        .transaction-type-badge {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-            background: var(--bg);
-        }
-        
-        .transaction-content {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .transaction-detail-grid {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 4px 12px;
-            align-items: center;
-        }
-        
-        .detail-date {
-            grid-column: 1 / -1;
-            font-size: 11px;
-            color: var(--text-muted);
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 4px;
-        }
-        
-        .detail-label {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-        
-        .detail-value {
-            font-size: 14px;
-            color: var(--text);
-            font-weight: 500;
-        }
-        
-        .transaction-amount-section {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        
-        .transaction-amount {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 18px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-        
-        .transaction-amount.income {
-            color: var(--success);
-        }
-        
-        .transaction-amount.expense {
-            color: var(--danger);
-        }
-        
-        .transaction-amount.transfer {
-            color: var(--warning);
-        }
-        
-        .transaction-actions {
-            display: flex;
-            gap: 6px;
-        }
-        
-        .action-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .action-btn:active {
-            transform: scale(0.9);
-        }
-        
-        .edit-btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .delete-btn:hover {
-            background: var(--danger);
-            border-color: var(--danger);
-        }
-        
-        /* Bottom Navigation */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 max(12px, env(safe-area-inset-bottom));
-            z-index: 100;
-            box-shadow: 0 -4px 12px var(--shadow);
-        }
-        
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 16px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 11px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border-radius: 12px;
-            cursor: pointer;
-        }
-        
-        .nav-item:active {
-            background: var(--bg-hover);
-        }
-        
-        .nav-item.active {
-            color: var(--primary);
-        }
-        
-        .nav-item span {
-            font-size: 24px;
-        }
-        
-        /* Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            display: none;
-            align-items: flex-end;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal.show {
-            display: flex;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .modal-content {
-            background: var(--bg-card);
-            width: 100%;
-            max-height: 80vh;
-            border-radius: 24px 24px 0 0;
-            padding: 24px;
-            overflow-y: auto;
-            animation: slideUp 0.3s ease;
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-        
-        .modal-header h2 {
-            font-size: 20px;
-            font-weight: 700;
-        }
-        
-        .close-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: none;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .close-btn:active {
-            transform: scale(0.9);
-        }
-        
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-        }
-        
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        
-        .empty-state span {
-            font-size: 64px;
-            display: block;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-        
-        /* Search */
-        .search-bar {
-            position: relative;
-            margin-bottom: 20px;
-        }
-        
-        .search-bar input {
-            padding-left: 48px;
-        }
-        
-        .search-bar::before {
-            content: '🔍';
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 20px;
-            pointer-events: none;
-        }
-        
-        /* Account Balance */
-        .account-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .account-item {
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .account-name {
-            font-weight: 600;
-            font-size: 15px;
-        }
-        
-        .account-balance {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px;
-            font-weight: 700;
-        }
-        
-        /* Responsive */
-        @media (max-width: 400px) {
-            .stat-value {
-                font-size: 24px;
-            }
-            
-            .stats {
-                gap: 8px;
-            }
-            
-            .stat-card {
-                padding: 16px;
-            }
-        }
-        
-        /* Page Transitions */
-        .page {
-            display: none;
-            animation: fadeInPage 0.3s ease;
-        }
-        
-        .page.active {
-            display: block;
-        }
-        
-        @keyframes fadeInPage {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root { --primary: #6366f1; --primary-dark: #4f46e5; --success: #10b981; --danger: #ef4444; --bg: #0f172a; --bg-card: #1e293b; --text: #f1f5f9; --text-muted: #94a3b8; --border: #334155; }
+        body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 80px; min-height: 100vh; }
+        .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+        header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); padding: 24px 20px; border-radius: 0 0 32px 32px; margin: -16px -16px 24px -16px; }
+        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); }
+        .stat-value { font-size: 24px; font-weight: 900; font-family: 'JetBrains Mono', monospace; }
+        .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+        .type-btn { padding: 12px; border: 2px solid var(--border); background: transparent; color: var(--text); border-radius: 12px; font-weight: 600; cursor: pointer; text-align: center; }
+        .type-btn.active { background: var(--primary); border-color: var(--primary); }
+        .type-btn.expense.active { background: var(--danger); border-color: var(--danger); }
+        .type-btn.income.active { background: var(--success); border-color: var(--success); }
+        input, select { width: 100%; padding: 14px; border: 2px solid var(--border); background: var(--bg); color: var(--text); border-radius: 12px; margin-bottom: 12px; font-size: 16px; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; font-weight: 700; cursor: pointer; background: var(--primary); color: white; font-size: 18px; }
+        .transaction-item { background: var(--bg-card); padding: 16px; border-radius: 16px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--primary); }
+        .transaction-item.income { border-left-color: var(--success); }
+        .transaction-item.expense { border-left-color: var(--danger); }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid var(--border); }
+        .nav-item { color: var(--text-muted); text-decoration: none; font-size: 12px; text-align: center; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .page { display: none; }
+        .page.active { display: block; }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: flex-end; }
+        .modal.show { display: flex; }
+        .modal-content { background: var(--bg-card); width: 100%; border-radius: 24px 24px 0 0; padding: 24px; max-height: 90vh; overflow-y: auto; }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Home Page -->
         <div id="homePage" class="page active">
             <div class="container">
                 <header>
-                    <h1>💰 Gorden記帳</h1>
-                    <div class="date" id="currentDate"></div>
+                    <h1 id="currentMonth">2024年 3月</h1>
+                    <div style="opacity: 0.8;">個人理財記帳本</div>
                 </header>
-                
                 <div class="stats">
-                    <div class="stat-card income">
-                        <div class="stat-label">本月收入</div>
-                        <div class="stat-value" id="monthlyIncome">$0</div>
-                    </div>
-                    <div class="stat-card expense">
-                        <div class="stat-label">本月支出</div>
-                        <div class="stat-value" id="monthlyExpense">$0</div>
-                    </div>
+                    <div class="stat-card"><div style="color: var(--success);">本月收入</div><div class="stat-value" id="monthlyIncome">NT$ 0</div></div>
+                    <div class="stat-card"><div style="color: var(--danger);">本月支出</div><div class="stat-value" id="monthlyExpense">NT$ 0</div></div>
                 </div>
-                
-                <div class="quick-add">
-                    <h2>快速記帳</h2>
-                    
-                    <div class="type-selector">
-                        <button class="type-btn income" data-type="收入">收入</button>
-                        <button class="type-btn expense active" data-type="支出">支出</button>
-                        <button class="type-btn" data-type="轉帳">轉帳</button>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>金額</label>
-                        <div class="amount-input-wrapper">
-                            <input type="number" id="amount" placeholder="0" inputmode="decimal">
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" id="categoryGroup">
-                        <label>分類</label>
-                        <select id="category">
-                            <option value="">選擇分類</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" id="subcategoryGroup">
-                        <label>子分類</label>
-                        <select id="subcategory">
-                            <option value="">選擇子分類</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>帳戶</label>
-                        <select id="account">
-                            <option value="">選擇帳戶</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" id="accountToGroup" style="display:none;">
-                        <label>轉入帳戶</label>
-                        <select id="accountTo">
-                            <option value="">選擇帳戶</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>備註</label>
-                        <input type="text" id="description" placeholder="記錄一些細節...">
-                    </div>
-                    
-                    <button class="btn btn-primary" id="addBtn">新增交易</button>
-                </div>
-                
-                <div class="transactions">
-                    <h2>📅 今日交易</h2>
-                    <div id="todayTransactions"></div>
-                </div>
+                <button class="btn" onclick="openModal()" style="margin-bottom: 24px;">➕ 新增交易</button>
+                <div id="todayTransactions"></div>
             </div>
         </div>
-        
-        <!-- Query Page -->
-        <div id="queryPage" class="page">
-            <div class="container">
-                <header>
-                    <h1>🔍 查詢記錄</h1>
-                    <div class="date">進階查詢功能</div>
-                </header>
-                
-                <div class="quick-add">
-                    <div class="form-group">
-                        <label>起始日期</label>
-                        <input type="date" id="startDate">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>結束日期</label>
-                        <input type="date" id="endDate">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>帳戶</label>
-                        <select id="queryAccount">
-                            <option value="">全部帳戶</option>
-                        </select>
-                    </div>
-                    
-                    <div class="search-bar">
-                        <input type="text" id="searchKeyword" placeholder="搜尋關鍵字...">
-                    </div>
-                    
-                    <button class="btn btn-primary" id="searchBtn">查詢</button>
-                </div>
-                
-                <div class="transactions">
-                    <h2>查詢結果</h2>
-                    <div id="queryResults"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Balance Page -->
+
         <div id="balancePage" class="page">
             <div class="container">
-                <header>
-                    <h1>💵 帳戶餘額</h1>
-                    <div class="date">查看所有帳戶</div>
-                </header>
-                
-                <div class="account-list" id="accountList"></div>
+                <header><h1>💵 帳戶餘額</h1></header>
+                <div id="accountList"></div>
             </div>
         </div>
-        
-        <!-- Bottom Navigation -->
+
+        <div id="addModal" class="modal">
+            <div class="modal-content">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                    <h2>新增明細</h2>
+                    <button onclick="closeModal()" style="background:none; border:none; color:white; font-size:24px;">✕</button>
+                </div>
+                <div class="type-selector">
+                    <button class="type-btn expense active" onclick="setType('支出', this)">支出</button>
+                    <button class="type-btn income" onclick="setType('收入', this)">收入</button>
+                    <button class="type-btn" onclick="setType('轉帳', this)">轉帳</button>
+                </div>
+                <input type="date" id="date">
+                <input type="number" id="amount" placeholder="金額">
+                <select id="account"><option value="">選擇帳戶</option></select>
+                <select id="accountTo" style="display:none;"><option value="">轉入帳戶</option></select>
+                <select id="category" onchange="updateSubcategories()"><option value="">選擇分類</option></select>
+                <select id="subcategory"><option value="">選擇子分類</option></select>
+                <input type="text" id="description" placeholder="備註">
+                <button class="btn" onclick="addTransaction()">確認儲存</button>
+            </div>
+        </div>
+
         <nav class="bottom-nav">
-            <a class="nav-item active" data-page="homePage">
-                <span>🏠</span>
-                首頁
-            </a>
-            <a class="nav-item" data-page="queryPage">
-                <span>🔍</span>
-                查詢
-            </a>
-            <a class="nav-item" data-page="balancePage">
-                <span>💵</span>
-                餘額
-            </a>
+            <a class="nav-item active" onclick="showPage('homePage', this)">首頁</a>
+            <a class="nav-item" onclick="showPage('balancePage', this)">餘額</a>
         </nav>
     </div>
 
     <script>
-        // Google Apps Script Web App URL - 請替換成您的Web App URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDRt6f8I4av3P__UnDVb4N9KA-M2dl9CyHOJTSrRO1b5NpOcDpSSb82vkik2o9sMq4pg/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN-1_WrtI4K96z4buD-_OfS2QemIdLF3lnMTt2SPEuVo_GYCBMSSL42kSAB43aAa2z9A/exec';
         
-        // 資料結構
-        let transactions = [];
-        let config = {
-            categories: {},
-            subcategories: {},
-            accounts: []
-        };
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let config = JSON.parse(localStorage.getItem('config')) || { categories: {}, subcategories: {}, accounts: [] };
         let currentType = '支出';
-        
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            initApp();
-            setupEventListeners();
-            updateCurrentDate();
-            
-            // 檢查是否在獨立模式（已加入桌面）
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('已安裝為PWA');
-            }
-        });
-        
-        // 初始化App
-        function initApp() {
-            // 載入本地資料
-            loadLocalData();
-            
-            // 同步遠端資料
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
             syncData();
-            
-            // 更新UI
             updateUI();
-        }
-        
-        // 設定事件監聽
-        function setupEventListeners() {
-            // 類型選擇
-            document.querySelectorAll('.type-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentType = this.dataset.type;
-                    updateCategoryOptions();
-                });
-            });
-            
-            // 分類變更
-            document.getElementById('category').addEventListener('change', function() {
-                updateSubcategoryOptions(this.value);
-            });
-            
-            // 新增按鈕
-            document.getElementById('addBtn').addEventListener('click', addTransaction);
-            
-            // 查詢按鈕
-            document.getElementById('searchBtn').addEventListener('click', performQuery);
-            
-            // 底部導航
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = this.dataset.page;
-                    switchPage(page);
-                });
-            });
-        }
-        
-        // 切換頁面
-        function switchPage(pageId) {
+        });
+
+        function showPage(pageId, navEl) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
             document.getElementById(pageId).classList.add('active');
-            event.target.closest('.nav-item').classList.add('active');
-            
-            if (pageId === 'balancePage') {
-                updateAccountBalance();
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navEl.classList.add('active');
+        }
+
+        function openModal() { document.getElementById('addModal').classList.add('show'); updateDropdowns(); }
+        function closeModal() { document.getElementById('addModal').classList.remove('show'); }
+
+        function setType(type, btn) {
+            currentType = type;
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('accountTo').style.display = type === '轉帳' ? 'block' : 'none';
+            document.getElementById('category').style.display = type === '轉帳' ? 'none' : 'block';
+            document.getElementById('subcategory').style.display = type === '轉帳' ? 'none' : 'block';
+            updateDropdowns();
+        }
+
+        function updateDropdowns() {
+            const accSelect = document.getElementById('account');
+            const accToSelect = document.getElementById('accountTo');
+            const catSelect = document.getElementById('category');
+            accSelect.innerHTML = '<option value="">選擇帳戶</option>';
+            accToSelect.innerHTML = '<option value="">轉入帳戶</option>';
+            config.accounts.forEach(acc => {
+                accSelect.innerHTML += `<option value="${acc}">${acc}</option>`;
+                accToSelect.innerHTML += `<option value="${acc}">${acc}</option>`;
+            });
+            catSelect.innerHTML = '<option value="">選擇分類</option>';
+            if (config.categories[currentType]) {
+                config.categories[currentType].forEach(cat => { catSelect.innerHTML += `<option value="${cat}">${cat}</option>`; });
             }
         }
-        
-        // 更新日期
-        function updateCurrentDate() {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-TW', options);
-        }
-        
-        // 載入本地資料
-        function loadLocalData() {
-            const savedTransactions = localStorage.getItem('transactions');
-            const savedConfig = localStorage.getItem('config');
-            
-            if (savedTransactions) {
-                transactions = JSON.parse(savedTransactions);
+
+        function updateSubcategories() {
+            const cat = document.getElementById('category').value;
+            const subSelect = document.getElementById('subcategory');
+            subSelect.innerHTML = '<option value="">選擇子分類</option>';
+            if (config.subcategories[cat]) {
+                config.subcategories[cat].forEach(sub => { subSelect.innerHTML += `<option value="${sub}">${sub}</option>`; });
             }
-            
-            if (savedConfig) {
-                config = JSON.parse(savedConfig);
-            } else {
-                // 預設配置
-                config = {
-                    categories: {
-                        '支出': ['飲食', '交通', '娛樂', '購物', '醫療', '其他'],
-                        '收入': ['薪資', '獎金', '投資', '其他收入']
-                    },
-                    subcategories: {
-                        '飲食': ['早餐', '午餐', '晚餐', '飲料', '零食'],
-                        '交通': ['公車', '捷運', '計程車', '加油', '停車'],
-                        '娛樂': ['電影', '遊戲', '旅遊', '運動'],
-                        '購物': ['服飾', '3C', '日用品', '書籍'],
-                        '醫療': ['看診', '藥品', '保健'],
-                        '其他': ['不分類'],
-                        '薪資': ['月薪', '時薪', '獎金'],
-                        '獎金': ['年終', '績效', '紅利'],
-                        '投資': ['股票', '基金', '定存'],
-                        '其他收入': ['不分類']
-                    },
-                    accounts: ['現金', '台銀', '郵局', 'RICHART', 'LINE BANK', '國泰世華']
-                };
-                
-                localStorage.setItem('config', JSON.stringify(config));
-            }
-            
-            updateCategoryOptions();
-            updateAccountOptions();
         }
-        
-        // 同步遠端資料
+
         async function syncData() {
-            console.log('🔄 開始同步資料...');
-            console.log('📍 SCRIPT_URL:', SCRIPT_URL);
-            
-            // 如果有設定Google Apps Script URL，則同步資料
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
-                try {
-                    console.log('📡 發送請求到:', SCRIPT_URL + '?action=getData');
-                    const response = await fetch(SCRIPT_URL + '?action=getData');
-                    console.log('📥 收到回應，狀態:', response.status);
-                    
-                    const text = await response.text();
-                    console.log('📄 原始回應長度:', text.length, '字元');
-                    
-                    const data = JSON.parse(text);
-                    console.log('📦 解析資料成功');
-                    console.log('   - 雲端交易數:', data.transactions ? data.transactions.length : 0);
-                    console.log('   - 雲端帳戶數:', data.config ? data.config.accounts.length : 0);
-                    
-                    if (data.transactions) {
-                        transactions = data.transactions;
-                        localStorage.setItem('transactions', JSON.stringify(transactions));
-                        console.log('✅ 交易資料已更新，筆數:', transactions.length);
-                    }
-                    
-                    if (data.config) {
-                        config = data.config;
-                        localStorage.setItem('config', JSON.stringify(config));
-                        console.log('✅ 設定資料已更新');
-                    }
-                    
+            if (!SCRIPT_URL) return;
+            try {
+                const response = await fetch(SCRIPT_URL + '?action=getData');
+                const data = await response.json();
+                if (data.success) {
+                    transactions = data.transactions;
+                    config = data.config;
+                    localStorage.setItem('transactions', JSON.stringify(transactions));
+                    localStorage.setItem('config', JSON.stringify(config));
                     updateUI();
-                    console.log('✅ 同步完成！');
-                    
-                    // 顯示同步成功提示（僅限非首次載入）
-                    if (transactions.length > 0) {
-                        showToast('☁️ 雲端同步成功');
-                    }
-                } catch (error) {
-                    console.error('❌ 同步錯誤詳情:', error);
-                    console.error('❌ 錯誤訊息:', error.message);
-                    console.error('❌ 錯誤堆疊:', error.stack);
-                    console.log('💾 使用本地資料');
                 }
-            } else {
-                console.log('⚠️ 未設定 SCRIPT_URL，使用本地模式');
-                console.log('   提示：若要啟用雲端同步，請在 HTML 中設定 SCRIPT_URL');
-            }
+            } catch (e) { console.error('同步失敗', e); }
         }
-        
-        // 更新分類選項
-        function updateCategoryOptions() {
-            const categorySelect = document.getElementById('category');
-            categorySelect.innerHTML = '<option value="">選擇分類</option>';
-            
-            const categoryGroup = document.getElementById('categoryGroup');
-            const subcategoryGroup = document.getElementById('subcategoryGroup');
-            const accountToGroup = document.getElementById('accountToGroup');
-            
-            if (currentType === '轉帳') {
-                categoryGroup.style.display = 'none';
-                subcategoryGroup.style.display = 'none';
-                accountToGroup.style.display = 'block';
-            } else {
-                categoryGroup.style.display = 'block';
-                subcategoryGroup.style.display = 'block';
-                accountToGroup.style.display = 'none';
-                
-                const categories = config.categories[currentType] || [];
-                categories.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = cat;
-                    categorySelect.appendChild(option);
-                });
-            }
-        }
-        
-        // 更新子分類選項
-        function updateSubcategoryOptions(category) {
-            const subcategorySelect = document.getElementById('subcategory');
-            subcategorySelect.innerHTML = '<option value="">選擇子分類</option>';
-            
-            const subcategories = config.subcategories[category] || [];
-            subcategories.forEach(subcat => {
-                const option = document.createElement('option');
-                option.value = subcat;
-                option.textContent = subcat;
-                subcategorySelect.appendChild(option);
-            });
-        }
-        
-        // 更新帳戶選項
-        function updateAccountOptions() {
-            const accountSelect = document.getElementById('account');
-            const accountToSelect = document.getElementById('accountTo');
-            const queryAccountSelect = document.getElementById('queryAccount');
-            
-            [accountSelect, accountToSelect, queryAccountSelect].forEach(select => {
-                if (select.id === 'queryAccount') {
-                    select.innerHTML = '<option value="">全部帳戶</option>';
-                } else {
-                    select.innerHTML = '<option value="">選擇帳戶</option>';
-                }
-                
-                config.accounts.forEach(acc => {
-                    const option = document.createElement('option');
-                    option.value = acc;
-                    option.textContent = acc;
-                    select.appendChild(option);
-                });
-            });
-        }
-        
-        // 新增交易
+
         async function addTransaction() {
-            const amount = parseFloat(document.getElementById('amount').value);
-            const category = document.getElementById('category').value;
-            const subcategory = document.getElementById('subcategory').value;
-            const account = document.getElementById('account').value;
-            const accountTo = document.getElementById('accountTo').value;
-            const description = document.getElementById('description').value;
-            
-            // 驗證
-            if (!amount || amount <= 0) {
-                alert('請輸入有效金額');
-                return;
-            }
-            
-            if (!account) {
-                alert('請選擇帳戶');
-                return;
-            }
-            
-            if (currentType === '轉帳' && !accountTo) {
-                alert('請選擇轉入帳戶');
-                return;
-            }
-            
-            if (currentType !== '轉帳' && !category) {
-                alert('請選擇分類');
-                return;
-            }
-            
-            console.log('➕ 新增交易:', {
-                type: currentType,
-                amount: amount,
-                category: category,
-                account: account,
-                editing: editingTransactionId ? true : false
-            });
-            
-            // 如果是編輯模式，先刪除舊記錄
-            if (editingTransactionId) {
-                const index = transactions.findIndex(t => t.id === editingTransactionId);
-                if (index !== -1) {
-                    const oldTransaction = transactions[index];
-                    transactions.splice(index, 1);
-                    console.log('🗑️ 已刪除舊記錄:', oldTransaction);
-                    
-                    // 同步刪除到雲端
-                    if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
-                        fetch(SCRIPT_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: JSON.stringify({ 
-                                action: 'deleteTransaction', 
-                                transaction: oldTransaction 
-                            })
-                        }).catch(e => console.log('舊記錄刪除失敗（離線）'));
-                    }
-                }
-            }
-            
-            // 建立交易記錄
+            const val = parseFloat(document.getElementById('amount').value);
             const transaction = {
-                id: editingTransactionId || Date.now(),
-                date: new Date().toISOString(),
-                type: currentType,
-                amount: amount,
-                category: category,
-                subcategory: subcategory,
-                account: account,
-                accountTo: accountTo,
-                description: description
+                date: document.getElementById('date').value,
+                amount: val,        // 轉出金額
+                amountTo: val,      // 在 App 中新增時，轉入金額預設等於轉出金額
+                account: document.getElementById('account').value,
+                accountTo: document.getElementById('accountTo').value,
+                category: currentType === '轉帳' ? '轉帳' : document.getElementById('category').value,
+                subcategory: document.getElementById('subcategory').value,
+                description: document.getElementById('description').value,
+                type: currentType
             };
-            
+
+            if (!transaction.amount || !transaction.account) return alert('請填寫完整資訊');
+
             transactions.unshift(transaction);
             localStorage.setItem('transactions', JSON.stringify(transactions));
-            console.log('💾 已儲存到本地，本地交易數:', transactions.length);
-            
-            // 重置編輯模式
-            const isEditing = editingTransactionId !== null;
-            editingTransactionId = null;
-            document.getElementById('addBtn').textContent = '新增交易';
-            
-            // 同步到遠端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
-                try {
-                    console.log('📡 同步到雲端...', SCRIPT_URL);
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain',
-                        },
-                        body: JSON.stringify({ action: 'addTransaction', transaction: transaction })
-                    });
-                    const result = await response.json();
-                    console.log('📥 雲端回應:', result);
-                    
-                    if (result.success) {
-                        console.log('✅ 雲端同步成功');
-                        showToast(isEditing ? '✅ 已更新（已同步）' : '✅ 已同步到雲端');
-                    } else {
-                        console.warn('⚠️ 雲端同步失敗:', result.error);
-                        showToast(isEditing ? '✅ 已更新（離線）' : '✅ 已儲存（離線）');
-                    }
-                } catch (error) {
-                    console.error('❌ 雲端同步錯誤:', error);
-                    showToast(isEditing ? '✅ 已更新（離線）' : '✅ 已儲存（離線）');
-                }
-            } else {
-                console.log('💾 本地模式');
-                showToast(isEditing ? '✅ 交易已更新' : '✅ 交易新增成功');
-            }
-            
-            // 清空表單
-            document.getElementById('amount').value = '';
-            document.getElementById('category').value = '';
-            document.getElementById('subcategory').value = '';
-            document.getElementById('description').value = '';
-            
-            // 更新UI
             updateUI();
+            closeModal();
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ action: 'addTransaction', transaction: transaction })
+                });
+            } catch (e) { console.error('同步失敗', e); }
         }
-        
-        // 更新UI
+
         function updateUI() {
-            updateMonthlyStats();
-            updateTodayTransactions();
-        }
-        
-        // 更新月度統計
-        function updateMonthlyStats() {
+            let income = 0, expense = 0;
             const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            
-            let income = 0;
-            let expense = 0;
-            
-            transactions.forEach(t => {
-                const tDate = new Date(t.date);
-                if (tDate >= firstDay && tDate <= lastDay) {
-                    if (t.type === '收入') {
-                        income += t.amount;
-                    } else if (t.type === '支出') {
-                        expense += t.amount;
-                    }
-                }
-            });
-            
-            document.getElementById('monthlyIncome').textContent = formatCurrency(income);
-            document.getElementById('monthlyExpense').textContent = formatCurrency(expense);
-        }
-        
-        // 更新今日交易
-        function updateTodayTransactions() {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const todayTrans = transactions.filter(t => {
-                const tDate = new Date(t.date);
-                tDate.setHours(0, 0, 0, 0);
-                return tDate.getTime() === today.getTime();
-            });
-            
-            const container = document.getElementById('todayTransactions');
-            
-            if (todayTrans.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <span>📭</span>
-                        <div>今天還沒有交易記錄</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            // 今日交易允許編輯
-            container.innerHTML = todayTrans.map(t => renderTransaction(t, false, true)).join('');
-        }
-        
-        // 渲染交易項目
-        function renderTransaction(t, showDate = false, allowEdit = false) {
-            const amountClass = t.type === '收入' ? 'income' : (t.type === '支出' ? 'expense' : 'transfer');
-            const amountSign = t.type === '收入' ? '+' : '-';
-            
-            // 格式化日期
-            let dateStr = '';
-            if (showDate) {
-                const d = new Date(t.date);
-                dateStr = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-            }
-            
-            // 根據交易類型顯示不同內容
-            let contentHTML = '';
-            
-            if (t.type === '轉帳') {
-                // 轉帳：日期、帳戶、帳戶(到)、金額
-                contentHTML = `
-                    <div class="transaction-detail-grid">
-                        ${showDate ? `<div class="detail-date">${dateStr}</div>` : ''}
-                        <div class="detail-label">帳戶：</div>
-                        <div class="detail-value">${t.account}</div>
-                        <div class="detail-label">轉至：</div>
-                        <div class="detail-value">${t.accountTo || '未知'}</div>
-                        ${t.description ? `
-                            <div class="detail-label">備註：</div>
-                            <div class="detail-value">${t.description}</div>
-                        ` : ''}
-                    </div>
-                `;
-            } else {
-                // 收入/支出：日期、子分類、帳戶、金額、敘述
-                contentHTML = `
-                    <div class="transaction-detail-grid">
-                        ${showDate ? `<div class="detail-date">${dateStr}</div>` : ''}
-                        <div class="detail-label">分類：</div>
-                        <div class="detail-value">${t.subcategory || t.category || '未分類'}</div>
-                        <div class="detail-label">帳戶：</div>
-                        <div class="detail-value">${t.account}</div>
-                        ${t.description ? `
-                            <div class="detail-label">備註：</div>
-                            <div class="detail-value">${t.description}</div>
-                        ` : ''}
-                    </div>
-                `;
-            }
-            
-            // 編輯/刪除按鈕
-            let actionButtons = '';
-            if (allowEdit) {
-                actionButtons = `
-                    <div class="transaction-actions">
-                        <button class="action-btn edit-btn" onclick="editTransaction(${t.id})">✏️</button>
-                        <button class="action-btn delete-btn" onclick="deleteTransaction(${t.id})">🗑️</button>
-                    </div>
-                `;
-            }
-            
-            return `
-                <div class="transaction-item ${amountClass}" data-id="${t.id}">
-                    <div class="transaction-type-badge">${t.type === '轉帳' ? '🔄' : (t.type === '收入' ? '💰' : '💳')}</div>
-                    <div class="transaction-content">
-                        ${contentHTML}
-                    </div>
-                    <div class="transaction-amount-section">
-                        <div class="transaction-amount ${amountClass}">${amountSign}${formatCurrency(t.amount)}</div>
-                        ${actionButtons}
-                    </div>
-                </div>
-            `;
-        }
-        
-        // 取得交易圖示
-        function getTransactionIcon(t) {
-            if (t.type === '轉帳') return '🔄';
-            if (t.type === '收入') return '💰';
-            
-            const icons = {
-                '飲食': '🍜',
-                '交通': '🚗',
-                '娛樂': '🎮',
-                '購物': '🛒',
-                '醫療': '💊',
-                '其他': '📝'
-            };
-            
-            return icons[t.category] || '💳';
-        }
-        
-        // 執行查詢
-        function performQuery() {
-            const startDate = new Date(document.getElementById('startDate').value);
-            const endDate = new Date(document.getElementById('endDate').value);
-            const account = document.getElementById('queryAccount').value;
-            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
-            
-            endDate.setHours(23, 59, 59, 999);
-            
-            let results = transactions.filter(t => {
-                const tDate = new Date(t.date);
-                
-                if (tDate < startDate || tDate > endDate) return false;
-                if (account && t.account !== account) return false;
-                if (keyword && !t.description.toLowerCase().includes(keyword)) return false;
-                
-                return true;
-            });
-            
-            const container = document.getElementById('queryResults');
-            
-            if (results.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <span>🔍</span>
-                        <div>沒有找到符合的記錄</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            // 查詢結果顯示日期並允許編輯
-            container.innerHTML = results.map(t => renderTransaction(t, true, true)).join('');
-        }
-        
-        // 更新帳戶餘額
-        function updateAccountBalance() {
             const balances = {};
-            
-            // 初始化所有帳戶餘額為0
-            config.accounts.forEach(acc => {
-                balances[acc] = 0;
-            });
-            
-            // 計算每個帳戶的餘額
-            transactions.forEach((t, index) => {
-                // 強制轉換金額為數字
-                const amount = parseFloat(t.amount) || 0;
+            config.accounts.forEach(a => balances[a] = 0);
+
+            transactions.forEach(t => {
+                const amtOut = parseFloat(t.amount) || 0;
+                const amtIn = parseFloat(t.amountTo) || amtOut; // 如果匯入資料沒有 amountTo，則預設等於 amount
+                const tDate = new Date(t.date);
                 
+                // 餘額與月度統計計算
                 if (t.type === '收入') {
-                    balances[t.account] = (balances[t.account] || 0) + amount;
+                    if (balances.hasOwnProperty(t.account)) balances[t.account] += amtOut;
+                    if (tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear()) income += amtOut;
                 } else if (t.type === '支出') {
-                    balances[t.account] = (balances[t.account] || 0) - amount;
+                    if (balances.hasOwnProperty(t.account)) balances[t.account] -= amtOut;
+                    if (tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear()) expense += amtOut;
                 } else if (t.type === '轉帳') {
-                    // ⭐ 修正：分別使用轉出和轉入金額
-                    const outAmount = parseFloat(t.amountOut || t.amount) || 0;
-                    const inAmount = parseFloat(t.amountIn || t.amount) || 0;
-                    
-                    balances[t.account] = (balances[t.account] || 0) - outAmount;
-                    if (t.accountTo) {
-                        balances[t.accountTo] = (balances[t.accountTo] || 0) + inAmount;
-                    }
+                    // Money Pro 設計：扣除 A 帳戶的「金額」，增加 B 帳戶的「收到的金額」
+                    if (balances.hasOwnProperty(t.account)) balances[t.account] -= amtOut;
+                    if (balances.hasOwnProperty(t.accountTo)) balances[t.accountTo] += amtIn;
                 }
             });
-            
-            // 按照 config.accounts 的順序顯示（而不是按餘額排序）
-            const container = document.getElementById('accountList');
-            container.innerHTML = config.accounts
-                .map(account => {
-                    const balance = balances[account] || 0;
-                    return `
-                        <div class="account-item">
-                            <div class="account-name">${account}</div>
-                            <div class="account-balance" style="color: ${balance >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatCurrency(balance)}</div>
-                        </div>
-                    `;
-                }).join('');
-        }
-        
-        // 格式化金額
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('zh-TW', {
-                style: 'currency',
-                currency: 'TWD',
-                minimumFractionDigits: 0
-            }).format(amount);
-        }
-        
-        // 顯示提示
-        function showToast(message) {
-            // 簡單的提示實現
-            const toast = document.createElement('div');
-            toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: var(--success);
-                color: white;
-                padding: 12px 24px;
-                border-radius: 12px;
-                font-weight: 600;
-                z-index: 10000;
-                animation: slideDown 0.3s ease;
-            `;
-            
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.animation = 'slideUp 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 2000);
-        }
-        
-        // ==================== 編輯和刪除功能 ====================
-        
-        // 刪除交易
-        async function deleteTransaction(id) {
-            if (!confirm('確定要刪除這筆交易嗎？')) {
-                return;
-            }
-            
-            console.log('🗑️ 刪除交易 ID:', id);
-            
-            // 從本地陣列中移除
-            const index = transactions.findIndex(t => t.id === id);
-            if (index === -1) {
-                alert('找不到這筆交易');
-                return;
-            }
-            
-            const deletedTransaction = transactions[index];
-            transactions.splice(index, 1);
-            localStorage.setItem('transactions', JSON.stringify(transactions));
-            console.log('💾 已從本地刪除');
-            
-            // 同步到雲端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
-                try {
-                    console.log('📡 同步刪除到雲端...');
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain',
-                        },
-                        body: JSON.stringify({ 
-                            action: 'deleteTransaction', 
-                            transactionId: id,
-                            transaction: deletedTransaction
-                        })
-                    });
-                    const result = await response.json();
-                    console.log('📥 雲端回應:', result);
-                    
-                    if (result.success) {
-                        console.log('✅ 雲端刪除成功');
-                        showToast('✅ 已刪除（已同步）');
-                    } else {
-                        console.warn('⚠️ 雲端刪除失敗:', result.error);
-                        showToast('✅ 已刪除（離線）');
-                    }
-                } catch (error) {
-                    console.error('❌ 雲端刪除錯誤:', error);
-                    showToast('✅ 已刪除（離線）');
-                }
-            } else {
-                showToast('✅ 交易已刪除');
-            }
-            
-            // 更新UI
-            updateUI();
-        }
-        
-        // 編輯交易
-        let editingTransactionId = null;  // 儲存正在編輯的交易ID
-        
-        function editTransaction(id) {
-            const transaction = transactions.find(t => t.id === id);
-            if (!transaction) {
-                alert('找不到這筆交易');
-                return;
-            }
-            
-            console.log('✏️ 編輯交易:', transaction);
-            
-            // 儲存編輯中的ID
-            editingTransactionId = id;
-            
-            // 填入表單
-            currentType = transaction.type;
-            
-            // 更新類型按鈕
-            document.querySelectorAll('.type-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.type === transaction.type) {
-                    btn.classList.add('active');
-                }
+
+            document.getElementById('monthlyIncome').textContent = `NT$ ${income.toLocaleString()}`;
+            document.getElementById('monthlyExpense').textContent = `NT$ ${expense.toLocaleString()}`;
+
+            // 更新今日交易
+            const todayStr = new Date().toISOString().split('T')[0];
+            const listDiv = document.getElementById('todayTransactions');
+            listDiv.innerHTML = '<h2>今日交易</h2>';
+            transactions.filter(t => t.date === todayStr).forEach(t => {
+                listDiv.innerHTML += `<div class="transaction-item ${t.type === '收入' ? 'income' : 'expense'}">
+                    <div><strong>${t.category}</strong><br><small>${t.account}${t.accountTo ? ' ➔ ' + t.accountTo : ''}</small></div>
+                    <div style="font-weight:bold">${t.amount.toLocaleString()}</div>
+                </div>`;
             });
-            
-            // 更新分類選項
-            updateCategoryOptions();
-            
-            // 填入資料
-            document.getElementById('amount').value = transaction.amount;
-            document.getElementById('category').value = transaction.category || '';
-            
-            // 觸發分類變更以更新子分類
-            updateSubcategoryOptions(transaction.category);
-            document.getElementById('subcategory').value = transaction.subcategory || '';
-            
-            document.getElementById('account').value = transaction.account;
-            
-            if (transaction.type === '轉帳') {
-                document.getElementById('accountTo').value = transaction.accountTo || '';
-            }
-            
-            document.getElementById('description').value = transaction.description || '';
-            
-            // 切換到首頁
-            switchPage('homePage');
-            
-            // 捲動到表單
-            document.querySelector('.quick-add').scrollIntoView({ behavior: 'smooth' });
-            
-            // 修改按鈕文字
-            document.getElementById('addBtn').textContent = '更新交易';
-            
-            showToast('📝 請修改後點選「更新交易」');
-        }
-        
-        // 設定預設日期
-        const today = new Date().toISOString().split('T')[0];
-        const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-        document.getElementById('startDate').value = firstDay;
-        document.getElementById('endDate').value = today;
-        
-        // Service Worker 註冊（PWA支援）
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker 註冊成功'))
-                    .catch(err => console.log('Service Worker 註冊失敗', err));
+
+            // 更新餘額列表
+            const accListDiv = document.getElementById('accountList');
+            accListDiv.innerHTML = '';
+            config.accounts.forEach(acc => {
+                accListDiv.innerHTML += `<div class="transaction-item"><span>${acc}</span><span style="font-weight:bold">NT$ ${(balances[acc] || 0).toLocaleString()}</span></div>`;
             });
         }
     </script>
