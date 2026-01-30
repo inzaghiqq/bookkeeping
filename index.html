@@ -853,7 +853,7 @@
 
     <script>
         // Google Apps Script Web App URL - 請替換成您的Web App URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDRt6f8I4av3P__UnDVb4N9KA-M2dl9CyHOJTSrRO1b5NpOcDpSSb82vkik2o9sMq4pg/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyJ7aYxgogFu_fR-mIDSYW3P9PaLZ92JcE85Kn37GxsX2r20MBQSPZuqqgKkA-Q_2QFBg/exec';
         
         // 資料結構
         let transactions = [];
@@ -987,7 +987,7 @@
             console.log('📍 SCRIPT_URL:', SCRIPT_URL);
             
             // 如果有設定Google Apps Script URL，則同步資料
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJ7aYxgogFu_fR-mIDSYW3P9PaLZ92JcE85Kn37GxsX2r20MBQSPZuqqgKkA-Q_2QFBg/exec') {
                 try {
                     console.log('📡 發送請求到:', SCRIPT_URL + '?action=getData');
                     const response = await fetch(SCRIPT_URL + '?action=getData');
@@ -1143,7 +1143,7 @@
                     console.log('🗑️ 已刪除舊記錄:', oldTransaction);
                     
                     // 同步刪除到雲端
-                    if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
+                    if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJ7aYxgogFu_fR-mIDSYW3P9PaLZ92JcE85Kn37GxsX2r20MBQSPZuqqgKkA-Q_2QFBg/exec') {
                         fetch(SCRIPT_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'text/plain' },
@@ -1179,7 +1179,7 @@
             document.getElementById('addBtn').textContent = '新增交易';
             
             // 同步到遠端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJ7aYxgogFu_fR-mIDSYW3P9PaLZ92JcE85Kn37GxsX2r20MBQSPZuqqgKkA-Q_2QFBg/exec') {
                 try {
                     console.log('📡 同步到雲端...', SCRIPT_URL);
                     const response = await fetch(SCRIPT_URL, {
@@ -1502,7 +1502,7 @@
             console.log('💾 已從本地刪除');
             
             // 同步到雲端
-            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbw4x2cla4A0KGXVocJhYWOXmDQokIjnmHXVE_uVtzs_SfvgLBa2XGLEmGAMa-dw9lSgIA/exec') {
+            if (SCRIPT_URL && SCRIPT_URL !== 'https://script.google.com/macros/s/AKfycbyJ7aYxgogFu_fR-mIDSYW3P9PaLZ92JcE85Kn37GxsX2r20MBQSPZuqqgKkA-Q_2QFBg/exec') {
                 try {
                     console.log('📡 同步刪除到雲端...');
                     const response = await fetch(SCRIPT_URL, {
