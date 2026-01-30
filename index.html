@@ -1418,11 +1418,14 @@
                 } else if (t.type === '支出') {
                     balances[t.account] = (balances[t.account] || 0) - amount;
                 } else if (t.type === '轉帳') {
-                    balances[t.account] = (balances[t.account] || 0) - amount;
+                    // ⭐ 修正：分別使用轉出和轉入金額
+                    const outAmount = parseFloat(t.amountOut || t.amount) || 0;
+                    const inAmount = parseFloat(t.amountIn || t.amount) || 0;
+                    
+                    balances[t.account] = (balances[t.account] || 0) - outAmount;
                     if (t.accountTo) {
-                        balances[t.accountTo] = (balances[t.accountTo] || 0) + amount;
+                        balances[t.accountTo] = (balances[t.accountTo] || 0) + inAmount;
                     }
-                }
             });
             
             // 按照 config.accounts 的順序顯示（而不是按餘額排序）
