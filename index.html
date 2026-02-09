@@ -924,10 +924,10 @@
                     switchPage(page);
                 });
             });
-        }
             
             // 初始化日期為今天
             setTodayDate();
+        }
         
         // 切換頁面
         function switchPage(pageId) {
@@ -948,7 +948,6 @@
             const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
             document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-TW', options);
         }
-        
         // 設定日期為今天
         function setTodayDate() {
             const today = new Date();
@@ -958,6 +957,7 @@
             const dateStr = `${year}-${month}-${day}`;
             document.getElementById('transactionDate').value = dateStr;
         }
+
         
         // 載入本地資料
         function loadLocalData() {
@@ -1148,7 +1148,7 @@
             console.log('➕ 新增交易:', {
                 type: currentType,
                 amount: amount,
-                date: transactionDate,
+                category: category,
                 account: account,
                 editing: editingTransactionId ? true : false
             });
@@ -1178,11 +1178,8 @@
             // 建立交易記錄
             const transaction = {
                 id: editingTransactionId || Date.now(),
-            // 建立交易記錄 - 使用選擇的日期
-            const selectedDate = transactionDate ? new Date(transactionDate + 'T12:00:00') : new Date();
-            const transaction = {
-                id: editingTransactionId || Date.now(),
-                date: selectedDate.toISOString(),
+                date: transactionDate ? new Date(transactionDate + 'T12:00:00').toISOString() : new Date().toISOString(),
+                type: currentType,
                 amount: amount,
                 category: category,
                 subcategory: subcategory,
