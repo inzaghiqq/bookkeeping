@@ -637,6 +637,132 @@
             pointer-events: none;
         }
         
+        /* Notes Section */
+        .notes-section {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 24px var(--shadow);
+            margin-bottom: 24px;
+        }
+        
+        .notes-section h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+        }
+        
+        .notes-section h2::before {
+            content: '📝';
+            font-size: 24px;
+        }
+        
+        .notes-content {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 120px;
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .notes-content.editable {
+            cursor: text;
+        }
+        
+        .notes-content.empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        .notes-textarea {
+            width: 100%;
+            background: var(--bg);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 16px;
+            min-height: 120px;
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: 'Noto Sans TC', sans-serif;
+            resize: vertical;
+        }
+        
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--primary-light);
+        }
+        
+        .notes-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .notes-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .notes-save {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .notes-save:active {
+            transform: scale(0.95);
+            background: var(--primary-dark);
+        }
+        
+        .notes-cancel {
+            background: var(--bg-hover);
+            color: var(--text);
+        }
+        
+        .notes-cancel:active {
+            transform: scale(0.95);
+        }
+        
+        .notes-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+        
+        .notes-edit-btn:hover {
+            background: var(--border);
+        }
+        
+        .notes-edit-btn:active {
+            transform: scale(0.95);
+        }
+        
         /* Account Balance */
         .account-list {
             display: flex;
@@ -735,7 +861,7 @@
                     <div class="form-group">
                         <label>金額</label>
                         <div class="amount-input-wrapper">
-                            <input type="number" id="amount" placeholder="0" inputmode="decimal">
+                            <input type="tel" id="amount" placeholder="0" pattern="[0-9]*" inputmode="numeric">
                         </div>
                     </div>
                     
@@ -778,6 +904,30 @@
                     </div>
                     
                     <button class="btn btn-primary" id="addBtn">新增交易</button>
+                </div>
+                
+                <!-- Notes Section -->
+                <div class="notes-section">
+                    <h2>重要提醒</h2>
+                    <div id="notesDisplay" class="notes-content empty" onclick="editNotes()">
+                        點擊這裡新增提醒事項...
+                        例如：信用卡扣款日、貸款繳費日等
+                    </div>
+                    <div id="notesEdit" style="display: none;">
+                        <textarea id="notesTextarea" class="notes-textarea" placeholder="輸入您的提醒事項...
+例如：
+🏦 信用卡扣款日：
+- 中信卡：每月5號
+- 台新卡：每月10號
+
+💳 貸款繳費：
+- 房貸：每月15號
+- 車貸：每月20號"></textarea>
+                        <div class="notes-buttons">
+                            <button class="notes-save" onclick="saveNotes()">💾 儲存</button>
+                            <button class="notes-cancel" onclick="cancelNotes()">✖️ 取消</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="transactions">
@@ -997,6 +1147,66 @@
             
             updateCategoryOptions();
             updateAccountOptions();
+            loadNotes();
+        }
+        
+        // 載入備忘錄
+        function loadNotes() {
+            const savedNotes = localStorage.getItem('notes');
+            const notesDisplay = document.getElementById('notesDisplay');
+            
+            if (savedNotes) {
+                notesDisplay.textContent = savedNotes;
+                notesDisplay.classList.remove('empty');
+            } else {
+                notesDisplay.textContent = '點擊這裡新增提醒事項...\n例如：信用卡扣款日、貸款繳費日等';
+                notesDisplay.classList.add('empty');
+            }
+        }
+        
+        // 編輯備忘錄
+        function editNotes() {
+            const notesDisplay = document.getElementById('notesDisplay');
+            const notesEdit = document.getElementById('notesEdit');
+            const notesTextarea = document.getElementById('notesTextarea');
+            
+            const currentNotes = localStorage.getItem('notes') || '';
+            notesTextarea.value = currentNotes;
+            
+            notesDisplay.style.display = 'none';
+            notesEdit.style.display = 'block';
+            notesTextarea.focus();
+        }
+        
+        // 儲存備忘錄
+        function saveNotes() {
+            const notesTextarea = document.getElementById('notesTextarea');
+            const notesDisplay = document.getElementById('notesDisplay');
+            const notesEdit = document.getElementById('notesEdit');
+            
+            const notesContent = notesTextarea.value.trim();
+            
+            if (notesContent) {
+                localStorage.setItem('notes', notesContent);
+                notesDisplay.textContent = notesContent;
+                notesDisplay.classList.remove('empty');
+            } else {
+                localStorage.removeItem('notes');
+                notesDisplay.textContent = '點擊這裡新增提醒事項...\n例如：信用卡扣款日、貸款繳費日等';
+                notesDisplay.classList.add('empty');
+            }
+            
+            notesDisplay.style.display = 'block';
+            notesEdit.style.display = 'none';
+        }
+        
+        // 取消編輯備忘錄
+        function cancelNotes() {
+            const notesDisplay = document.getElementById('notesDisplay');
+            const notesEdit = document.getElementById('notesEdit');
+            
+            notesDisplay.style.display = 'block';
+            notesEdit.style.display = 'none';
         }
         
         // 同步遠端資料
