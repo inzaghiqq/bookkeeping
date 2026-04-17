@@ -1,9 +1,9 @@
-const CACHE_NAME = 'bookkeeping-app-v2';
+const CACHE_NAME = 'bookkeeping-app-v3';
 const urlsToCache = [
   'index.html',
   'manifest.json'
 ];
-
+ 
 // 安裝 Service Worker
 self.addEventListener('install', event => {
   event.waitUntil(
@@ -14,7 +14,7 @@ self.addEventListener('install', event => {
       })
   );
 });
-
+ 
 // 啟動 Service Worker
 self.addEventListener('activate', event => {
   event.waitUntil(
@@ -30,7 +30,7 @@ self.addEventListener('activate', event => {
     })
   );
 });
-
+ 
 // 攔截請求
 self.addEventListener('fetch', event => {
   event.respondWith(
