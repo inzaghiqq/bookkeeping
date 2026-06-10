@@ -1909,85 +1909,99 @@
         
         // 執行查詢
         function performQuery() {
-            const startVal = document.getElementById('startDate').value;
-            const endVal = document.getElementById('endDate').value;
-            const account = document.getElementById('queryAccount').value;
-            const queryType = document.getElementById('queryType').value;
-            const queryCategory = document.getElementById('queryCategory').value;
-            const querySubcategory = document.getElementById('querySubcategory').value;
-            const descKeyword = document.getElementById('searchDescription').value.trim().toLowerCase();
-            
-            const startDate = startVal ? new Date(startVal + 'T00:00:00') : null;
-            const endDate = endVal ? new Date(endVal + 'T23:59:59') : null;
-            
-            let results = transactions.filter(t => {
-                const tDate = new Date(t.date);
-                
-                if (startDate && tDate < startDate) return false;
-                if (endDate && tDate > endDate) return false;
-                if (account && t.account !== account && t.accountTo !== account) return false;
-                if (queryType && t.type !== queryType) return false;
-                if (queryCategory && t.category !== queryCategory) return false;
-                if (querySubcategory && t.subcategory !== querySubcategory) return false;
-                
-                // 敘述搜尋
-                if (descKeyword) {
-                    const desc = (t.description || '').toLowerCase();
-                    // 支援多關鍵字（用空格分隔，全部都要符合）
-                    const keywords = descKeyword.split(/\s+/).filter(k => k);
-                    for (const kw of keywords) {
-                        if (!desc.includes(kw)) return false;
-                    }
-                }
-                
-                return true;
-            });
-            
-            // 按日期排序（新的在前）
-            results.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
             const container = document.getElementById('queryResults');
             const statsDiv = document.getElementById('queryStats');
-            
-            if (results.length === 0) {
+            try {
+                const startVal = document.getElementById('startDate').value;
+                const endVal = document.getElementById('endDate').value;
+                const account = document.getElementById('queryAccount').value;
+                const queryType = document.getElementById('queryType').value;
+                const queryCategory = document.getElementById('queryCategory').value;
+                const querySubcategory = document.getElementById('querySubcategory').value;
+                const descKeyword = document.getElementById('searchDescription').value.trim().toLowerCase();
+                
+                const startDate = startVal ? new Date(startVal + 'T00:00:00') : null;
+                const endDate = endVal ? new Date(endVal + 'T23:59:59') : null;
+                
+                let results = transactions.filter(t => {
+                    const tDate = new Date(t.date);
+                    
+                    if (startDate && tDate < startDate) return false;
+                    if (endDate && tDate > endDate) return false;
+                    if (account && t.account !== account && t.accountTo !== account) return false;
+                    if (queryType && t.type !== queryType) return false;
+                    if (queryCategory && t.category !== queryCategory) return false;
+                    if (querySubcategory && t.subcategory !== querySubcategory) return false;
+                    
+                    // 敘述搜尋
+                    if (descKeyword) {
+                        const desc = (t.description || '').toLowerCase();
+                        // 支援多關鍵字（用空格分隔，全部都要符合）
+                        const keywords = descKeyword.split(/\s+/).filter(k => k);
+                        for (const kw of keywords) {
+                            if (!desc.includes(kw)) return false;
+                        }
+                    }
+                    
+                    return true;
+                });
+                
+                // 按日期排序（新的在前）
+                results.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                if (results.length === 0) {
+                    statsDiv.style.display = 'none';
+                    const dateInfo = startVal && endVal ? `${startVal} ~ ${endVal}` : '(未設定)';
+                    const kwInfo = descKeyword || '(未輸入)';
+                    const sampleDesc = transactions.slice(0, 5).map(t => `"${(t.description || '')}"`).join(', ');
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <span>🔍</span>
+                            <div>沒有找到符合的記錄</div>
+                            <div style="font-size:12px;color:var(--text-muted);margin-top:12px;text-align:left;line-height:1.8;">
+                                📊 總交易筆數：${transactions.length}<br>
+                                📅 日期區間：${dateInfo}<br>
+                                🔎 搜尋關鍵字：${kwInfo}<br>
+                                📝 前5筆敘述：${sampleDesc || '(無資料)'}
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 計算統計
+                let totalIncome = 0;
+                let totalExpense = 0;
+                results.forEach(t => {
+                    const amount = parseFloat(t.amount) || 0;
+                    if (t.type === '收入') totalIncome += amount;
+                    else if (t.type === '支出') totalExpense += amount;
+                });
+                
+                statsDiv.style.display = 'block';
+                document.getElementById('queryCount').textContent = results.length;
+                document.getElementById('queryIncome').textContent = formatCurrency(totalIncome);
+                document.getElementById('queryExpense').textContent = formatCurrency(totalExpense);
+                
+                // 分頁渲染
+                queryResults = results;
+                queryKeyword = descKeyword;
+                queryPage = 0;
+                renderQueryPage();
+            } catch (e) {
                 statsDiv.style.display = 'none';
-                const dateInfo = startVal && endVal ? `${startVal} ~ ${endVal}` : '(未設定)';
-                const kwInfo = descKeyword || '(未輸入)';
-                const sampleDesc = transactions.slice(0, 5).map(t => `"${(t.description || '')}"`).join(', ');
                 container.innerHTML = `
                     <div class="empty-state">
-                        <span>🔍</span>
-                        <div>沒有找到符合的記錄</div>
-                        <div style="font-size:12px;color:var(--text-muted);margin-top:12px;text-align:left;line-height:1.8;">
-                            📊 總交易筆數：${transactions.length}<br>
-                            📅 日期區間：${dateInfo}<br>
-                            🔎 搜尋關鍵字：${kwInfo}<br>
-                            📝 前5筆敘述：${sampleDesc || '(無資料)'}
+                        <span>⚠️</span>
+                        <div>查詢發生錯誤</div>
+                        <div style="font-size:12px;color:#f87171;margin-top:12px;text-align:left;line-height:1.8;word-break:break-all;">
+                            ${e.name}: ${e.message}<br><br>
+                            ${e.stack ? e.stack.replace(/\n/g, '<br>') : ''}
                         </div>
                     </div>
                 `;
-                return;
+                console.error('查詢錯誤:', e);
             }
-            
-            // 計算統計
-            let totalIncome = 0;
-            let totalExpense = 0;
-            results.forEach(t => {
-                const amount = parseFloat(t.amount) || 0;
-                if (t.type === '收入') totalIncome += amount;
-                else if (t.type === '支出') totalExpense += amount;
-            });
-            
-            statsDiv.style.display = 'block';
-            document.getElementById('queryCount').textContent = results.length;
-            document.getElementById('queryIncome').textContent = formatCurrency(totalIncome);
-            document.getElementById('queryExpense').textContent = formatCurrency(totalExpense);
-            
-            // 分頁渲染
-            queryResults = results;
-            queryKeyword = descKeyword;
-            queryPage = 0;
-            renderQueryPage();
         }
         
         function renderQueryPage() {
