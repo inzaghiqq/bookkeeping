@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bookkeeping-app-v3';
+const CACHE_NAME = 'bookkeeping-app-v6';
 const urlsToCache = [
   'index.html',
   'manifest.json'
@@ -6,6 +6,7 @@ const urlsToCache = [
  
 // 安裝 Service Worker
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -27,38 +28,23 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => clients.claim())
   );
 });
  
-// 攔截請求
+// 攔截請求 — 網路優先，快取作為備援
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        // 快取命中 - 返回快取的資源
-        if (response) {
-          return response;
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        
-        return fetch(event.request).then(
-          response => {
-            // 檢查是否收到有效的回應
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // 複製回應
-            const responseToCache = response.clone();
-            
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-            
-            return response;
-          }
-        );
+        return response;
       })
+      .catch(() => caches.match(event.request))
   );
 });
