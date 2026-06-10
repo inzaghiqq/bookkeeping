@@ -1951,10 +1951,19 @@
             
             if (results.length === 0) {
                 statsDiv.style.display = 'none';
+                const dateInfo = startVal && endVal ? `${startVal} ~ ${endVal}` : '(未設定)';
+                const kwInfo = descKeyword || '(未輸入)';
+                const sampleDesc = transactions.slice(0, 5).map(t => `"${(t.description || '')}"`).join(', ');
                 container.innerHTML = `
                     <div class="empty-state">
                         <span>🔍</span>
                         <div>沒有找到符合的記錄</div>
+                        <div style="font-size:12px;color:var(--text-muted);margin-top:12px;text-align:left;line-height:1.8;">
+                            📊 總交易筆數：${transactions.length}<br>
+                            📅 日期區間：${dateInfo}<br>
+                            🔎 搜尋關鍵字：${kwInfo}<br>
+                            📝 前5筆敘述：${sampleDesc || '(無資料)'}
+                        </div>
                     </div>
                 `;
                 return;
