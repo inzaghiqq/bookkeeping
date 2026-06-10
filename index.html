@@ -1756,9 +1756,10 @@
             
             // 高亮敘述中的關鍵字
             function highlightText(text) {
-                if (!text || !highlightKeyword) return text || '';
+                const str = String(text || '');
+                if (!str || !highlightKeyword) return str;
                 const keywords = highlightKeyword.split(/\s+/).filter(k => k);
-                let result = text;
+                let result = str;
                 keywords.forEach(kw => {
                     const regex = new RegExp(`(${kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
                     result = result.replace(regex, '<mark style="background:var(--warning);color:#000;border-radius:3px;padding:0 2px;">$1</mark>');
@@ -1935,7 +1936,7 @@
                     
                     // 敘述搜尋
                     if (descKeyword) {
-                        const desc = (t.description || '').toLowerCase();
+                        const desc = String(t.description || '').toLowerCase();
                         // 支援多關鍵字（用空格分隔，全部都要符合）
                         const keywords = descKeyword.split(/\s+/).filter(k => k);
                         for (const kw of keywords) {
