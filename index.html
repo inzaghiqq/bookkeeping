@@ -18,6 +18,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     
     <style>
         * {
@@ -826,6 +827,127 @@
                 transform: translateY(0);
             }
         }
+        
+        /* Chart Page */
+        .chart-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .chart-section h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-height: 260px;
+        }
+        
+        .chart-container canvas {
+            width: 100% !important;
+        }
+        
+        .chart-range-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .chart-range-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .chart-range-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .chart-range-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Pagination */
+        .load-more {
+            text-align: center;
+            padding: 16px;
+        }
+        
+        .load-more-btn {
+            padding: 12px 32px;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .load-more-btn:active {
+            transform: scale(0.95);
+            background: var(--bg-hover);
+        }
+        
+        .load-more-btn:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+        
+        /* Sync Button */
+        .sync-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 10px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans TC', sans-serif;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .sync-btn:active {
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.25);
+        }
+        
+        .sync-btn.spinning span {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -834,8 +956,13 @@
         <div id="homePage" class="page active">
             <div class="container">
                 <header>
-                    <h1>💰 Gorden記帳</h1>
-                    <div class="date" id="currentDate"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; position:relative; z-index:1;">
+                        <div>
+                            <h1>💰 Gorden記帳</h1>
+                            <div class="date" id="currentDate"></div>
+                        </div>
+                        <button class="sync-btn" onclick="manualSync()">🔄 <span>同步</span></button>
+                    </div>
                 </header>
                 
                 <div class="stats">
@@ -1034,6 +1161,42 @@
             </div>
         </div>
         
+        <!-- Chart Page -->
+        <div id="chartPage" class="page">
+            <div class="container">
+                <header>
+                    <h1>📊 統計圖表</h1>
+                    <div class="date">視覺化分析</div>
+                </header>
+                
+                <div class="chart-section">
+                    <h2>📈 每月收支趨勢</h2>
+                    <div class="chart-range-selector">
+                        <button class="chart-range-btn active" data-months="6" onclick="switchChartRange(6)">6個月</button>
+                        <button class="chart-range-btn" data-months="12" onclick="switchChartRange(12)">12個月</button>
+                        <button class="chart-range-btn" data-months="24" onclick="switchChartRange(24)">24個月</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <h2>🧩 本月收支佔比</h2>
+                    <div class="chart-container">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-section">
+                    <h2>🏦 帳戶餘額分佈</h2>
+                    <div class="chart-container">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <a class="nav-item active" data-page="homePage">
@@ -1047,6 +1210,10 @@
             <a class="nav-item" data-page="balancePage">
                 <span>💵</span>
                 餘額
+            </a>
+            <a class="nav-item" data-page="chartPage">
+                <span>📊</span>
+                圖表
             </a>
         </nav>
     </div>
@@ -1063,6 +1230,16 @@
             accounts: []
         };
         let currentType = '支出';
+        
+        // 圖表
+        let chartInstances = {};
+        let chartMonths = 6;
+        
+        // 分頁
+        const PAGE_SIZE = 20;
+        let queryPage = 0;
+        let queryResults = [];
+        let queryKeyword = '';
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -1143,7 +1320,12 @@
             }
             
             if (pageId === 'queryPage') {
+                initQueryDates();
                 updateQueryFilters();
+            }
+            
+            if (pageId === 'chartPage') {
+                renderCharts();
             }
         }
         
@@ -1693,6 +1875,9 @@
             
             // 重置子分類
             document.getElementById('querySubcategory').innerHTML = '<option value="">全部子分類</option>';
+            
+            // 更新帳戶下拉（資料同步後可能有新增的帳戶）
+            updateAccountOptions();
         }
         
         // 查詢頁分類變更時更新子分類
@@ -1724,20 +1909,22 @@
         
         // 執行查詢
         function performQuery() {
-            const startDate = new Date(document.getElementById('startDate').value);
-            const endDate = new Date(document.getElementById('endDate').value);
+            const startVal = document.getElementById('startDate').value;
+            const endVal = document.getElementById('endDate').value;
             const account = document.getElementById('queryAccount').value;
             const queryType = document.getElementById('queryType').value;
             const queryCategory = document.getElementById('queryCategory').value;
             const querySubcategory = document.getElementById('querySubcategory').value;
             const descKeyword = document.getElementById('searchDescription').value.trim().toLowerCase();
             
-            endDate.setHours(23, 59, 59, 999);
+            const startDate = startVal ? new Date(startVal + 'T00:00:00') : null;
+            const endDate = endVal ? new Date(endVal + 'T23:59:59') : null;
             
             let results = transactions.filter(t => {
                 const tDate = new Date(t.date);
                 
-                if (tDate < startDate || tDate > endDate) return false;
+                if (startDate && tDate < startDate) return false;
+                if (endDate && tDate > endDate) return false;
                 if (account && t.account !== account && t.accountTo !== account) return false;
                 if (queryType && t.type !== queryType) return false;
                 if (queryCategory && t.category !== queryCategory) return false;
@@ -1787,8 +1974,33 @@
             document.getElementById('queryIncome').textContent = formatCurrency(totalIncome);
             document.getElementById('queryExpense').textContent = formatCurrency(totalExpense);
             
-            // 高亮關鍵字的渲染
-            container.innerHTML = results.map(t => renderTransaction(t, true, true, descKeyword)).join('');
+            // 分頁渲染
+            queryResults = results;
+            queryKeyword = descKeyword;
+            queryPage = 0;
+            renderQueryPage();
+        }
+        
+        function renderQueryPage() {
+            const container = document.getElementById('queryResults');
+            const start = 0;
+            const end = Math.min((queryPage + 1) * PAGE_SIZE, queryResults.length);
+            const pageItems = queryResults.slice(0, end);
+            
+            container.innerHTML = pageItems.map(t => renderTransaction(t, true, true, queryKeyword)).join('');
+            
+            if (end < queryResults.length) {
+                container.innerHTML += `
+                    <div class="load-more">
+                        <button class="load-more-btn" onclick="loadMoreResults()">📥 載入更多（${end}/${queryResults.length}）</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function loadMoreResults() {
+            queryPage++;
+            renderQueryPage();
         }
         
         // 更新帳戶餘額
@@ -1869,6 +2081,245 @@
                 toast.style.animation = 'slideUp 0.3s ease';
                 setTimeout(() => toast.remove(), 300);
             }, 2000);
+        }
+        
+        // ==================== 手動同步 ====================
+        
+        let isSyncing = false;
+        
+        async function manualSync() {
+            if (isSyncing) return;
+            isSyncing = true;
+            
+            const btn = document.querySelector('.sync-btn');
+            btn.classList.add('spinning');
+            btn.querySelector('span').textContent = '同步中';
+            
+            await syncData();
+            
+            btn.classList.remove('spinning');
+            btn.querySelector('span').textContent = '同步';
+            isSyncing = false;
+            
+            // 如果在圖表頁，重新整理圖表
+            if (document.getElementById('chartPage').classList.contains('active')) {
+                renderCharts();
+            }
+        }
+        
+        // ==================== 統計圖表 ====================
+        
+        function destroyCharts() {
+            Object.keys(chartInstances).forEach(key => {
+                if (chartInstances[key]) {
+                    chartInstances[key].destroy();
+                    delete chartInstances[key];
+                }
+            });
+        }
+        
+        function switchChartRange(months) {
+            chartMonths = months;
+            document.querySelectorAll('.chart-range-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.chart-range-btn[data-months="${months}"]`).classList.add('active');
+            renderCharts();
+        }
+        
+        function renderCharts() {
+            if (typeof Chart === 'undefined') return;
+            destroyCharts();
+            
+            renderTrendChart();
+            renderPieChart();
+            renderBalanceChart();
+        }
+        
+        function renderTrendChart() {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            const months = [];
+            const incomeData = [];
+            const expenseData = [];
+            
+            const now = new Date();
+            for (let i = chartMonths - 1; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const label = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+                months.push(label);
+                
+                let inc = 0, exp = 0;
+                transactions.forEach(t => {
+                    const tDate = new Date(t.date);
+                    if (tDate.getFullYear() === d.getFullYear() && tDate.getMonth() === d.getMonth()) {
+                        const amt = parseFloat(t.amount) || 0;
+                        if (t.type === '收入') inc += amt;
+                        else if (t.type === '支出') exp += amt;
+                    }
+                });
+                incomeData.push(inc);
+                expenseData.push(exp);
+            }
+            
+            chartInstances.trend = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: '收入',
+                            data: incomeData,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: '支出',
+                            data: expenseData,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#f1f5f9', font: { size: 12 } }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            grid: { color: 'rgba(51, 65, 85, 0.5)' }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => 'NT$' + v.toLocaleString() },
+                            grid: { color: 'rgba(51, 65, 85, 0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderPieChart() {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            const now = new Date();
+            const catMap = {};
+            
+            transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate.getFullYear() === now.getFullYear() && tDate.getMonth() === now.getMonth()) {
+                    const amt = parseFloat(t.amount) || 0;
+                    if (t.type === '收入') {
+                        catMap['__income'] = (catMap['__income'] || 0) + amt;
+                    } else if (t.type === '支出') {
+                        const cat = t.category || '未分類';
+                        catMap[cat] = (catMap[cat] || 0) + amt;
+                    }
+                }
+            });
+            
+            const labels = [];
+            const data = [];
+            const colors = [];
+            const palette = ['#10b981','#ef4444','#f59e0b','#6366f1','#ec4899','#14b8a6','#f97316','#8b5cf6','#06b6d4','#84cc16','#d946ef','#0ea5e9'];
+            let ci = 0;
+            
+            if (catMap['__income']) {
+                labels.push('收入');
+                data.push(catMap['__income']);
+                colors.push(palette[ci++ % palette.length]);
+            }
+            Object.keys(catMap).forEach(k => {
+                if (k === '__income') return;
+                labels.push(k);
+                data.push(catMap[k]);
+                colors.push(palette[ci++ % palette.length]);
+            });
+            
+            if (data.length === 0) {
+                labels.push('暫無資料');
+                data.push(1);
+                colors.push('#334155');
+            }
+            
+            chartInstances.pie = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#1e293b' }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#f1f5f9', font: { size: 11 }, padding: 8 }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderBalanceChart() {
+            const ctx = document.getElementById('balanceChart').getContext('2d');
+            const balances = {};
+            config.accounts.forEach(a => balances[a] = 0);
+            
+            transactions.forEach(t => {
+                const amt = parseFloat(t.amount) || 0;
+                if (t.type === '收入') balances[t.account] = (balances[t.account] || 0) + amt;
+                else if (t.type === '支出') balances[t.account] = (balances[t.account] || 0) - amt;
+                else if (t.type === '轉帳') {
+                    const outAmt = parseFloat(t.amountOut || t.amount) || 0;
+                    const inAmt = parseFloat(t.amountIn || t.amount) || 0;
+                    balances[t.account] = (balances[t.account] || 0) - outAmt;
+                    if (t.accountTo) balances[t.accountTo] = (balances[t.accountTo] || 0) + inAmt;
+                }
+            });
+            
+            const labels = config.accounts;
+            const data = labels.map(a => balances[a] || 0);
+            const colors = data.map(v => v >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)');
+            const borderColors = data.map(v => v >= 0 ? 'rgba(16,185,129,1)' : 'rgba(239,68,68,1)');
+            
+            chartInstances.balance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '餘額',
+                        data,
+                        backgroundColor: colors,
+                        borderColor: borderColors,
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => 'NT$' + v.toLocaleString() },
+                            grid: { color: 'rgba(51, 65, 85, 0.5)' }
+                        },
+                        y: {
+                            ticks: { color: '#f1f5f9', font: { size: 11 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
         }
         
         // ==================== 編輯和刪除功能 ====================
@@ -1987,11 +2438,18 @@
             showToast('📝 請修改後點選「更新交易」');
         }
         
-        // 設定預設日期
-        const today = new Date().toISOString().split('T')[0];
-        const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-        document.getElementById('startDate').value = firstDay;
-        document.getElementById('endDate').value = today;
+        // 設定預設日期（時區安全）
+        function initQueryDates() {
+            const now = new Date();
+            const sy = String(now.getFullYear());
+            const sm = String(now.getMonth() + 1).padStart(2, '0');
+            const sd = String(now.getDate()).padStart(2, '0');
+            const startEl = document.getElementById('startDate');
+            const endEl = document.getElementById('endDate');
+            if (startEl && !startEl.value) startEl.value = `${sy}-${sm}-01`;
+            if (endEl && !endEl.value) endEl.value = `${sy}-${sm}-${sd}`;
+        }
+        initQueryDates();
         
         // Service Worker 註冊（PWA支援）
         if ('serviceWorker' in navigator) {
